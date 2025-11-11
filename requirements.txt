@@ -1,0 +1,4 @@
+scikit-surprise
+streamlit
+pandas
+numpy
