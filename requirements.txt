@@ -1,4 +1,6 @@
-scikit-surprise
+# Pin versions to avoid C-extension/NumPy ABI issues on Streamlit Cloud
+numpy==1.26.4
+pandas==2.1.4
+scipy==1.16.3
+scikit-surprise==1.1.4
 streamlit
-pandas
-numpy
