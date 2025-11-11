@@ -113,7 +113,7 @@ for t, metric in zip(tabs, chosen_measures):
                 color=alt.Color("algorithm:N", legend=None),
             )
         )
-        st.altair_chart((bars + errs).properties(height=380), use_container_width=True)
+        st.altair_chart((bars + errs).properties(height=380), width="stretch")
 
         # Tabla ordenada + descarga
         table = pd.DataFrame.from_dict(
@@ -123,7 +123,7 @@ for t, metric in zip(tabs, chosen_measures):
         table = table.sort_values(metric, ascending=asc)
         c1, c2 = st.columns([3, 1])
         with c1:
-            st.dataframe(table, use_container_width=True)
+            st.dataframe(table, width="stretch")
         with c2:
             st.download_button(
                 "Descargar CSV",
@@ -146,7 +146,7 @@ for t, metric in zip(tabs, chosen_measures):
                     )
                     .properties(height=320)
                 )
-                st.altair_chart(box, use_container_width=True)
+                st.altair_chart(box, width="stretch")
             else:
                 st.info("Sin datos para esta métrica.")
 
@@ -186,6 +186,4 @@ if include_time:
                     color=alt.Color("algorithm:N", legend=None),
                 )
             )
-            st.altair_chart(
-                (bars_t + errs_t).properties(height=320), use_container_width=True
-            )
+            st.altair_chart((bars_t + errs_t).properties(height=320), width="stretch")
