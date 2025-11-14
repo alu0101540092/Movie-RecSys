@@ -3,6 +3,7 @@ import numpy as np
 from surprise.model_selection import cross_validate
 
 
+# Ejecuta cross_validate para cada algoritmo y devuelve sus resultados
 def evaluate_algorithms(
     data,
     algorithms: Dict[str, object],
@@ -10,7 +11,6 @@ def evaluate_algorithms(
     cv: int = 5,
     verbose: bool = True,
 ):
-    """Ejecuta cross_validate para cada algoritmo y devuelve sus resultados."""
     results: Dict[str, dict] = {}
     for name, algo in algorithms.items():
         results[name] = cross_validate(
@@ -19,8 +19,8 @@ def evaluate_algorithms(
     return results
 
 
+# Calcula medias por métrica y algoritmo (RMSE/MSE/MAE/FCP + fit_time/test_time)
 def summarize_means(results: Dict[str, dict], metrics: Iterable[str]):
-    """Calcula medias por métrica y algoritmo, compatible con RMSE/MSE/MAE/FCP + fit_time/test_time."""
     means = {}
     for metric in metrics:
         agg = {}
@@ -36,8 +36,8 @@ def summarize_means(results: Dict[str, dict], metrics: Iterable[str]):
     return means
 
 
+# Calcula desviación estándar por métrica y algoritmo (ddof=1)
 def summarize_stds(results: Dict[str, dict], metrics: Iterable[str]):
-    """Calcula desviación estándar por métrica y algoritmo (ddof=1)."""
     stds = {}
     for metric in metrics:
         agg = {}
@@ -53,13 +53,12 @@ def summarize_stds(results: Dict[str, dict], metrics: Iterable[str]):
     return stds
 
 
-# ...existing code...
+# Convierte resultados de cross_validate a DataFrame largo (algorithm, metric, fold, value)
 def results_to_long_df(
     results: Dict[str, dict],
     measures: Iterable[str] = ("RMSE", "MSE", "MAE", "FCP"),
     include_time: bool = True,
 ):
-    """Convierte resultados de cross_validate a un DataFrame largo: algorithm, metric, fold, value."""
     import pandas as pd
 
     rows = []
