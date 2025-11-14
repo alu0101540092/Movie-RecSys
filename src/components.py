@@ -99,7 +99,7 @@ def draw_boxplot(metric: str, df_long: pd.DataFrame):
         )
         .properties(height=320)
     )
-    st.altair_chart(box, use_container_width=True)
+    st.altair_chart(box, width="stretch")
 
 
 # Dibuja el contenido de una pestaña de métrica (gráfico, tabla, boxplot)
@@ -111,12 +111,12 @@ def draw_metric_tab(
     chart = chart_bar_with_error(df_plot, metric, add_tooltip=True).properties(
         height=380
     )
-    st.altair_chart(chart, use_container_width=True)
+    st.altair_chart(chart, width="stretch")
 
     table = build_metric_table(metric, results_mean, results_std)
     c1, c2 = st.columns([3, 1])
     with c1:
-        st.dataframe(table, use_container_width=True)
+        st.dataframe(table, width="stretch")
     with c2:
         st.download_button(
             "Descargar CSV",
@@ -139,4 +139,4 @@ def render_time_section(results_mean: dict, results_std: dict):
             chart = chart_bar_with_error(df_t, tmetric, add_tooltip=True).properties(
                 height=320
             )
-            st.altair_chart(chart, use_container_width=True)
+            st.altair_chart(chart, width="stretch")
