@@ -1,6 +1,6 @@
 from typing import Dict, Iterable
-import numpy as np
-from surprise.model_selection import cross_validate
+import numpy as np  # type: ignore
+from surprise.model_selection import cross_validate  # type: ignore
 
 
 # Ejecuta cross_validate para cada algoritmo y devuelve sus resultados
@@ -59,7 +59,7 @@ def results_to_long_df(
     measures: Iterable[str] = ("RMSE", "MSE", "MAE", "FCP"),
     include_time: bool = True,
 ):
-    import pandas as pd
+    import pandas as pd  # type: ignore
 
     rows = []
     for algo, res in results.items():

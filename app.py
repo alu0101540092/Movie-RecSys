@@ -1,4 +1,4 @@
-import streamlit as st
+import streamlit as st  # type: ignore
 from src.components import (
     configure_streamlit,
     sidebar_controls,

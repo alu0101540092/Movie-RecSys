@@ -1,4 +1,4 @@
-import streamlit as st
+import streamlit as st  # type: ignore
 from src.datasets import load_ml100k
 from src.algorithms import default_algorithms
 from src.evaluate import (

@@ -1,6 +1,6 @@
-import streamlit as st
-import pandas as pd
-import altair as alt
+import streamlit as st  # type: ignore
+import pandas as pd  # type: ignore
+import altair as alt  # type: ignore
 
 
 # Configura la página de Streamlit (título, icono, layout)
@@ -17,7 +17,7 @@ def sidebar_controls(all_measures: tuple[str, ...]):
         chosen_measures = st.multiselect(
             "Métricas",
             all_measures,
-            default=["RMSE", "MAE"],
+            default=["RMSE", "MSE", "MAE", "FCP"],
             help="Selecciona qué métricas evaluar y visualizar.",
         )
         include_time = st.toggle("Incluir tiempos (fit/test)", value=True)

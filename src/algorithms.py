@@ -1,4 +1,4 @@
-from surprise import SVD, NMF, SlopeOne, KNNBasic, CoClustering
+from surprise import SVD, NMF, SlopeOne, KNNBasic, CoClustering  # type: ignore
 
 
 # Devuelve un diccionario nombre->algoritmo con los modelos por defecto

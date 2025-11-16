@@ -1,4 +1,4 @@
-from surprise import Dataset
+from surprise import Dataset  # type: ignore
 
 
 # Carga el dataset MovieLens 100k desde Surprise
