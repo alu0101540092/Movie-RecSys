@@ -1,0 +1,28 @@
+services:
+  app:
+    # Imagen oficial de Python 3.11
+    image: python:3.11
+
+    container_name: movie-recsys-dev
+
+    # 2. Directorio de trabajo DENTRO del contenedor
+    working_dir: /app
+
+    # 3. Comando para arrancar
+    command: >
+      sh -c "pip install -r requirements.txt &&
+             streamlit run app.py
+             --server.port 8501
+             --server.address 0.0.0.0"
+
+    # 4. Mapeo de puertos
+    ports:
+      - '8501:8501'
+
+    # 5. Monta el código en el contenedor
+    volumes:
+      - .:/app
+
+    # Mantiene la terminal activa
+    stdin_open: true
+    tty: true
