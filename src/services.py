@@ -42,6 +42,42 @@ def run_evaluation(
     return results, means, stds, df_long
 
 
+# Parsea una línea del fichero de resultados para extraer una métrica.
+def _parse_line_for_metric(line, algo_name, results_mean, results_std, long_rows):
+    parts = line.split()
+    if not parts:
+        return
+
+    metric_map = {
+        "RMSE": "RMSE",
+        "MSE": "MSE",
+        "MAE": "MAE",
+        "FCP": "FCP",
+        "Fit time": "fit_time",
+        "Test time": "test_time",
+    }
+    line_start = " ".join(parts[:2])
+    metric = metric_map.get(parts[0]) or metric_map.get(line_start)
+
+    if not metric:
+        return
+
+    try:
+        # Last 7 values are: fold1, fold2, fold3, fold4, fold5, mean, std
+        values = [float(x) for x in parts[-7:]]
+        folds_vals, mean_val, std_val = values[:5], values[5], values[6]
+
+        results_mean[metric][algo_name] = mean_val
+        results_std[metric][algo_name] = std_val
+
+        for i, v in enumerate(folds_vals):
+            long_rows.append(
+                {"algorithm": algo_name, "metric": metric, "fold": i + 1, "value": v}
+            )
+    except (ValueError, IndexError):
+        pass
+
+
 def parse_static_results(filepath: str):
     if not os.path.exists(filepath):
         return {}, {}, pd.DataFrame()
@@ -49,17 +85,12 @@ def parse_static_results(filepath: str):
     with open(filepath, "r") as f:
         content = f.read()
 
-    results_mean = {}
-    results_std = {}
+    metrics = ["RMSE", "MSE", "MAE", "FCP", "fit_time", "test_time"]
+    results_mean = {m: {} for m in metrics}
+    results_std = {m: {} for m in metrics}
     long_rows = []
 
-    metrics = ["RMSE", "MSE", "MAE", "FCP", "fit_time", "test_time"]
-    for m in metrics:
-        results_mean[m] = {}
-        results_std[m] = {}
-
     blocks = content.split("Evaluating RMSE, MSE, MAE, FCP of algorithm ")
-
     for block in blocks:
         if not block.strip():
             continue
@@ -68,40 +99,9 @@ def parse_static_results(filepath: str):
         algo_name = lines[0].split(" ")[0]
 
         for line in lines:
-            parts = line.split()
-            if not parts:
-                continue
-
-            metric = None
-            if parts[0] in ("RMSE", "MSE", "MAE", "FCP"):
-                metric = parts[0]
-            elif parts[0] == "Fit" and parts[1] == "time":
-                metric = "fit_time"
-            elif parts[0] == "Test" and parts[1] == "time":
-                metric = "test_time"
-
-            if metric:
-                try:
-                    # Last 7 values are: fold1, fold2, fold3, fold4, fold5, mean, std
-                    values = [float(x) for x in parts[-7:]]
-                    folds_vals = values[:5]
-                    mean_val = values[5]
-                    std_val = values[6]
-
-                    results_mean[metric][algo_name] = mean_val
-                    results_std[metric][algo_name] = std_val
-
-                    for i, v in enumerate(folds_vals):
-                        long_rows.append(
-                            {
-                                "algorithm": algo_name,
-                                "metric": metric,
-                                "fold": i + 1,
-                                "value": v,
-                            }
-                        )
-                except ValueError:
-                    continue
+            _parse_line_for_metric(
+                line, algo_name, results_mean, results_std, long_rows
+            )
 
     df_long = pd.DataFrame(long_rows)
     return results_mean, results_std, df_long
