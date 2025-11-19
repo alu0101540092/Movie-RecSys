@@ -1,0 +1,29 @@
+Evaluating RMSE, MSE, MAE, FCP of algorithm SVD on 5 split(s).
+
+                  Fold 1  Fold 2  Fold 3  Fold 4  Fold 5  Mean    Std     
+RMSE (testset)    0.7715  0.7722  0.7720  0.7718  0.7720  0.7719  0.0002  
+MSE (testset)     0.5952  0.5962  0.5960  0.5956  0.5960  0.5958  0.0004  
+MAE (testset)     0.5801  0.5805  0.5805  0.5804  0.5806  0.5804  0.0002  
+FCP (testset)     0.7431  0.7422  0.7426  0.7422  0.7422  0.7425  0.0004  
+Fit time          241.19  251.99  251.33  251.63  251.63  249.56  4.19    
+Test time         84.65   58.07   82.74   61.95   55.05   68.49   12.62   
+
+Evaluating RMSE, MSE, MAE, FCP of algorithm NMF on 5 split(s).
+
+                  Fold 1  Fold 2  Fold 3  Fold 4  Fold 5  Mean    Std     
+RMSE (testset)    0.8623  0.8615  0.8638  0.8636  0.8636  0.8629  0.0009  
+MSE (testset)     0.7435  0.7422  0.7461  0.7458  0.7458  0.7447  0.0015  
+MAE (testset)     0.6557  0.6556  0.6573  0.6564  0.6569  0.6564  0.0007  
+FCP (testset)     0.6858  0.6870  0.6864  0.6866  0.6866  0.6865  0.0004  
+Fit time          355.00  366.83  366.71  367.65  371.84  365.61  5.62    
+Test time         54.72   49.99   74.18   70.19   66.30   63.08   9.22
+
+Evaluating RMSE, MSE, MAE, FCP of algorithm CoClustering on 5 split(s).
+
+                  Fold 1  Fold 2  Fold 3  Fold 4  Fold 5  Mean    Std     
+RMSE (testset)    0.8794  0.8801  0.8802  0.8831  0.8799  0.8805  0.0013  
+MSE (testset)     0.7734  0.7746  0.7748  0.7798  0.7742  0.7754  0.0023  
+MAE (testset)     0.6810  0.6813  0.6815  0.6829  0.6816  0.6817  0.0007  
+FCP (testset)     0.6909  0.6898  0.6900  0.6896  0.6905  0.6902  0.0005  
+Fit time          473.73  490.16  495.31  499.15  498.36  491.34  9.36    
+Test time         77.66   49.32   49.87   57.85   61.57   59.25   10.32

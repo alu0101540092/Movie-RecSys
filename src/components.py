@@ -104,7 +104,11 @@ def draw_boxplot(metric: str, df_long: pd.DataFrame):
 
 # Dibuja el contenido de una pestaña de métrica (gráfico, tabla, boxplot)
 def draw_metric_tab(
-    metric: str, results_mean: dict, results_std: dict, df_long: pd.DataFrame
+    metric: str,
+    results_mean: dict,
+    results_std: dict,
+    df_long: pd.DataFrame,
+    key_prefix: str = "",
 ):
     st.subheader(f"Métrica: {metric}")
     df_plot = build_metric_summary_df(metric, results_mean, results_std)
@@ -123,6 +127,7 @@ def draw_metric_tab(
             table.to_csv(index=True).encode("utf-8"),
             file_name=f"results_{metric.lower()}.csv",
             mime="text/csv",
+            key=f"{key_prefix}_{metric}_csv",
         )
 
     with st.expander("Ver distribución por fold (boxplot)"):
@@ -130,7 +135,7 @@ def draw_metric_tab(
 
 
 # Dibuja la sección de tiempos (fit y test) con gráficos de barras
-def render_time_section(results_mean: dict, results_std: dict):
+def render_time_section(results_mean: dict, results_std: dict, key_prefix: str = ""):
     st.markdown("### Tiempos de Ejecución")
     time_tabs = st.tabs(["Tiempo de Entrenamiento (fit)", "Tiempo de Test"])
     for tab, tmetric in zip(time_tabs, ("fit_time", "test_time")):
