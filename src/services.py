@@ -42,6 +42,30 @@ def run_evaluation(
     return results, means, stds, df_long
 
 
+# Extrae los valores numéricos (folds, media, std) de una línea de texto.
+def _extract_numeric_values(
+    parts: list[str],
+) -> tuple[list[float], float, float] | None:
+    try:
+        numeric_parts = [
+            p
+            for p in parts
+            if p.replace(".", "", 1).isdigit()
+            or (p.startswith("-") and p[1:].replace(".", "", 1).isdigit())
+        ]
+        values = [float(x) for x in numeric_parts]
+
+        if len(values) < 3:  # Necesitamos al menos fold1, mean, std
+            return None
+
+        mean_val = values[-2]
+        std_val = values[-1]
+        folds_vals = values[:-2]
+        return folds_vals, mean_val, std_val
+    except (ValueError, IndexError):
+        return None
+
+
 # Parsea una línea del fichero de resultados para extraer una métrica.
 def _parse_line_for_metric(line, algo_name, results_mean, results_std, long_rows):
     parts = line.split()
@@ -62,32 +86,18 @@ def _parse_line_for_metric(line, algo_name, results_mean, results_std, long_rows
     if not metric:
         return
 
-    try:
-        # Los últimos valores son numéricos: folds, media, std
-        numeric_parts = [
-            p
-            for p in parts
-            if p.replace(".", "", 1).isdigit()
-            or (p.startswith("-") and p[1:].replace(".", "", 1).isdigit())
-        ]
-        values = [float(x) for x in numeric_parts]
+    numeric_values = _extract_numeric_values(parts)
+    if not numeric_values:
+        return
 
-        if len(values) < 3:  # Necesitamos al menos fold1, mean, std
-            return
+    folds_vals, mean_val, std_val = numeric_values
+    results_mean[metric][algo_name] = mean_val
+    results_std[metric][algo_name] = std_val
 
-        mean_val = values[-2]
-        std_val = values[-1]
-        folds_vals = values[:-2]
-
-        results_mean[metric][algo_name] = mean_val
-        results_std[metric][algo_name] = std_val
-
-        for i, v in enumerate(folds_vals):
-            long_rows.append(
-                {"algorithm": algo_name, "metric": metric, "fold": i + 1, "value": v}
-            )
-    except (ValueError, IndexError):
-        pass
+    for i, v in enumerate(folds_vals):
+        long_rows.append(
+            {"algorithm": algo_name, "metric": metric, "fold": i + 1, "value": v}
+        )
 
 
 def parse_static_results(filepath: str):
