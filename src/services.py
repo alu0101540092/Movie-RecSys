@@ -63,9 +63,21 @@ def _parse_line_for_metric(line, algo_name, results_mean, results_std, long_rows
         return
 
     try:
-        # Last 7 values are: fold1, fold2, fold3, fold4, fold5, mean, std
-        values = [float(x) for x in parts[-7:]]
-        folds_vals, mean_val, std_val = values[:5], values[5], values[6]
+        # Los últimos valores son numéricos: folds, media, std
+        numeric_parts = [
+            p
+            for p in parts
+            if p.replace(".", "", 1).isdigit()
+            or (p.startswith("-") and p[1:].replace(".", "", 1).isdigit())
+        ]
+        values = [float(x) for x in numeric_parts]
+
+        if len(values) < 3:  # Necesitamos al menos fold1, mean, std
+            return
+
+        mean_val = values[-2]
+        std_val = values[-1]
+        folds_vals = values[:-2]
 
         results_mean[metric][algo_name] = mean_val
         results_std[metric][algo_name] = std_val

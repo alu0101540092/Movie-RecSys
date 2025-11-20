@@ -35,7 +35,11 @@ def render_static_results(chosen_measures, include_time):
     st.markdown("---")
     st.header("Resultados ML-32m (Pre-calculados)")
     st.info(
-        "Estos resultados provienen de una ejecución previa sobre el dataset de 32 millones de valoraciones."
+        """
+        Estos resultados provienen de una ejecución previa sobre el dataset de 32 millones de valoraciones.
+
+        **Nota:** Los algoritmos `Slope One` y `KNNBasic` se ejecutaron sobre un 10% de este dataset debido a restricciones de memoria.
+        """
     )
 
     static_mean, static_std, static_df_long = get_static_results()
