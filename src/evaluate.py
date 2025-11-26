@@ -3,14 +3,26 @@ import numpy as np  # type: ignore
 from surprise.model_selection import cross_validate  # type: ignore
 
 
-# Ejecuta cross_validate para cada algoritmo y devuelve sus resultados
 def evaluate_algorithms(
     data,
     algorithms: Dict[str, object],
     measures: Iterable[str] = ("RMSE", "MSE", "MAE", "FCP"),
     cv: int = 5,
     verbose: bool = True,
-):
+) -> Dict[str, dict]:
+    """
+    Ejecuta cross_validate para cada algoritmo y devuelve sus resultados.
+
+    Args:
+        data: Dataset de Surprise.
+        algorithms (Dict[str, object]): Diccionario de algoritmos.
+        measures (Iterable[str]): Métricas a evaluar.
+        cv (int): Número de folds.
+        verbose (bool): Si mostrar output detallado.
+
+    Returns:
+        Dict[str, dict]: Diccionario con los resultados.
+    """
     results: Dict[str, dict] = {}
     for name, algo in algorithms.items():
         results[name] = cross_validate(
@@ -19,8 +31,17 @@ def evaluate_algorithms(
     return results
 
 
-# Calcula medias por métrica y algoritmo (RMSE/MSE/MAE/FCP + fit_time/test_time)
-def summarize_means(results: Dict[str, dict], metrics: Iterable[str]):
+def summarize_means(results: Dict[str, dict], metrics: Iterable[str]) -> Dict[str, Dict[str, float]]:
+    """
+    Calcula medias por métrica y algoritmo (RMSE/MSE/MAE/FCP + fit_time/test_time).
+
+    Args:
+        results (Dict[str, dict]): Resultados de la evaluación.
+        metrics (Iterable[str]): Métricas a resumir.
+
+    Returns:
+        Dict[str, Dict[str, float]]: Diccionario de medias.
+    """
     means = {}
     for metric in metrics:
         agg = {}
@@ -36,8 +57,17 @@ def summarize_means(results: Dict[str, dict], metrics: Iterable[str]):
     return means
 
 
-# Calcula desviación estándar por métrica y algoritmo (ddof=1)
-def summarize_stds(results: Dict[str, dict], metrics: Iterable[str]):
+def summarize_stds(results: Dict[str, dict], metrics: Iterable[str]) -> Dict[str, Dict[str, float]]:
+    """
+    Calcula desviación estándar por métrica y algoritmo (ddof=1).
+
+    Args:
+        results (Dict[str, dict]): Resultados de la evaluación.
+        metrics (Iterable[str]): Métricas a resumir.
+
+    Returns:
+        Dict[str, Dict[str, float]]: Diccionario de desviaciones estándar.
+    """
     stds = {}
     for metric in metrics:
         agg = {}
@@ -53,12 +83,22 @@ def summarize_stds(results: Dict[str, dict], metrics: Iterable[str]):
     return stds
 
 
-# Convierte resultados de cross_validate a DataFrame largo (algorithm, metric, fold, value)
 def results_to_long_df(
     results: Dict[str, dict],
     measures: Iterable[str] = ("RMSE", "MSE", "MAE", "FCP"),
     include_time: bool = True,
-):
+) -> "pd.DataFrame":
+    """
+    Convierte resultados de cross_validate a DataFrame largo (algorithm, metric, fold, value).
+
+    Args:
+        results (Dict[str, dict]): Resultados de la evaluación.
+        measures (Iterable[str]): Métricas evaluadas.
+        include_time (bool): Si incluir tiempos.
+
+    Returns:
+        pd.DataFrame: DataFrame en formato largo.
+    """
     import pandas as pd  # type: ignore
 
     rows = []

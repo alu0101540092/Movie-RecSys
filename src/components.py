@@ -3,14 +3,24 @@ import pandas as pd  # type: ignore
 import altair as alt  # type: ignore
 
 
-# Configura la página de Streamlit (título, icono, layout)
-def configure_streamlit():
+def configure_streamlit() -> None:
+    """
+    Configura la página de Streamlit (título, icono, layout).
+    """
     st.set_page_config(page_title="Movie-RecSys", page_icon="🎬", layout="wide")
     st.title("Comparación de Algoritmos de Recomendación")
 
 
-# Dibuja los controles en la barra lateral y devuelve los parámetros
-def sidebar_controls(all_measures: tuple[str, ...]):
+def sidebar_controls(all_measures: tuple[str, ...]) -> tuple[int, list[str], bool, bool]:
+    """
+    Dibuja los controles en la barra lateral y devuelve los parámetros.
+
+    Args:
+        all_measures (tuple[str, ...]): Todas las métricas disponibles.
+
+    Returns:
+        tuple[int, list[str], bool, bool]: Tupla con (cv, chosen_measures, include_time, verbose).
+    """
     with st.sidebar:
         st.header("Parámetros")
         cv = st.slider("Número de particiones (CV)", 3, 10, 5)
@@ -25,8 +35,18 @@ def sidebar_controls(all_measures: tuple[str, ...]):
     return cv, chosen_measures, include_time, verbose
 
 
-# Construye un DataFrame resumen para graficar barras + error
-def build_metric_summary_df(metric: str, results_mean: dict, results_std: dict):
+def build_metric_summary_df(metric: str, results_mean: dict, results_std: dict) -> pd.DataFrame:
+    """
+    Construye un DataFrame resumen para graficar barras + error.
+
+    Args:
+        metric (str): La métrica a procesar.
+        results_mean (dict): Diccionario de medias.
+        results_std (dict): Diccionario de desviaciones estándar.
+
+    Returns:
+        pd.DataFrame: DataFrame con columnas algorithm, mean, std, ymin, ymax.
+    """
     df = pd.DataFrame(
         {
             "algorithm": list(results_mean[metric].keys()),
@@ -40,8 +60,18 @@ def build_metric_summary_df(metric: str, results_mean: dict, results_std: dict):
     return df.sort_values("mean", ascending=asc)
 
 
-# Crea un gráfico de barras con barras de error para un DataFrame
-def chart_bar_with_error(df: pd.DataFrame, y_title: str, add_tooltip: bool = False):
+def chart_bar_with_error(df: pd.DataFrame, y_title: str, add_tooltip: bool = False) -> alt.Chart:
+    """
+    Crea un gráfico de barras con barras de error para un DataFrame.
+
+    Args:
+        df (pd.DataFrame): DataFrame con los datos.
+        y_title (str): Título del eje Y.
+        add_tooltip (bool): Si añadir tooltips.
+
+    Returns:
+        alt.Chart: Gráfico de Altair.
+    """
     bars = (
         alt.Chart(df)
         .mark_bar(cornerRadiusTopLeft=3, cornerRadiusTopRight=3)
@@ -72,8 +102,18 @@ def chart_bar_with_error(df: pd.DataFrame, y_title: str, add_tooltip: bool = Fal
     return bars + errs
 
 
-# Construye la tabla de resultados para una métrica (media y std)
-def build_metric_table(metric: str, results_mean: dict, results_std: dict):
+def build_metric_table(metric: str, results_mean: dict, results_std: dict) -> pd.DataFrame:
+    """
+    Construye la tabla de resultados para una métrica (media y std).
+
+    Args:
+        metric (str): La métrica a procesar.
+        results_mean (dict): Diccionario de medias.
+        results_std (dict): Diccionario de desviaciones estándar.
+
+    Returns:
+        pd.DataFrame: Tabla ordenada.
+    """
     table = pd.DataFrame.from_dict(
         results_mean[metric], orient="index", columns=[metric]
     )
@@ -83,8 +123,14 @@ def build_metric_table(metric: str, results_mean: dict, results_std: dict):
     return table.sort_values(metric, ascending=asc)
 
 
-# Dibuja el boxplot por fold para una métrica si hay datos
-def draw_boxplot(metric: str, df_long: pd.DataFrame):
+def draw_boxplot(metric: str, df_long: pd.DataFrame) -> None:
+    """
+    Dibuja el boxplot por fold para una métrica si hay datos.
+
+    Args:
+        metric (str): La métrica a visualizar.
+        df_long (pd.DataFrame): DataFrame en formato largo.
+    """
     df_metric = df_long[df_long["metric"] == metric]
     if df_metric.empty:
         st.info("Sin datos para esta métrica.")
@@ -102,14 +148,23 @@ def draw_boxplot(metric: str, df_long: pd.DataFrame):
     st.altair_chart(box, width="stretch")
 
 
-# Dibuja el contenido de una pestaña de métrica (gráfico, tabla, boxplot)
 def draw_metric_tab(
     metric: str,
     results_mean: dict,
     results_std: dict,
     df_long: pd.DataFrame,
     key_prefix: str = "",
-):
+) -> None:
+    """
+    Dibuja el contenido de una pestaña de métrica (gráfico, tabla, boxplot).
+
+    Args:
+        metric (str): La métrica a visualizar.
+        results_mean (dict): Diccionario de medias.
+        results_std (dict): Diccionario de desviaciones estándar.
+        df_long (pd.DataFrame): DataFrame en formato largo.
+        key_prefix (str): Prefijo para claves de Streamlit.
+    """
     st.subheader(f"Métrica: {metric}")
     df_plot = build_metric_summary_df(metric, results_mean, results_std)
     chart = chart_bar_with_error(df_plot, metric, add_tooltip=True).properties(
@@ -134,8 +189,15 @@ def draw_metric_tab(
         draw_boxplot(metric, df_long)
 
 
-# Dibuja la sección de tiempos (fit y test) con gráficos de barras
-def render_time_section(results_mean: dict, results_std: dict, key_prefix: str = ""):
+def render_time_section(results_mean: dict, results_std: dict, key_prefix: str = "") -> None:
+    """
+    Dibuja la sección de tiempos (fit y test) con gráficos de barras.
+
+    Args:
+        results_mean (dict): Diccionario de medias.
+        results_std (dict): Diccionario de desviaciones estándar.
+        key_prefix (str): Prefijo para claves de Streamlit.
+    """
     st.markdown("### Tiempos de Ejecución")
     time_tabs = st.tabs(["Tiempo de Entrenamiento (fit)", "Tiempo de Test"])
     for tab, tmetric in zip(time_tabs, ("fit_time", "test_time")):
