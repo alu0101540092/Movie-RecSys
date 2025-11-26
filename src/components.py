@@ -11,7 +11,9 @@ def configure_streamlit() -> None:
     st.title("Comparación de Algoritmos de Recomendación")
 
 
-def sidebar_controls(all_measures: tuple[str, ...]) -> tuple[int, list[str], bool, bool]:
+def sidebar_controls(
+    all_measures: tuple[str, ...],
+) -> tuple[int, list[str], bool, bool]:
     """
     Dibuja los controles en la barra lateral y devuelve los parámetros.
 
@@ -35,7 +37,9 @@ def sidebar_controls(all_measures: tuple[str, ...]) -> tuple[int, list[str], boo
     return cv, chosen_measures, include_time, verbose
 
 
-def build_metric_summary_df(metric: str, results_mean: dict, results_std: dict) -> pd.DataFrame:
+def build_metric_summary_df(
+    metric: str, results_mean: dict, results_std: dict
+) -> pd.DataFrame:
     """
     Construye un DataFrame resumen para graficar barras + error.
 
@@ -60,7 +64,9 @@ def build_metric_summary_df(metric: str, results_mean: dict, results_std: dict) 
     return df.sort_values("mean", ascending=asc)
 
 
-def chart_bar_with_error(df: pd.DataFrame, y_title: str, add_tooltip: bool = False) -> alt.Chart:
+def chart_bar_with_error(
+    df: pd.DataFrame, y_title: str, add_tooltip: bool = False
+) -> alt.Chart:
     """
     Crea un gráfico de barras con barras de error para un DataFrame.
 
@@ -76,7 +82,9 @@ def chart_bar_with_error(df: pd.DataFrame, y_title: str, add_tooltip: bool = Fal
         alt.Chart(df)
         .mark_bar(cornerRadiusTopLeft=3, cornerRadiusTopRight=3)
         .encode(
-            x=alt.X("algorithm:N", sort=list(df["algorithm"]), title="Algoritmo"),
+            x=alt.X(
+                "algorithm:N", sort=list(df["algorithm"]), title="Algoritmo"
+            ),
             y=alt.Y("mean:Q", title=y_title),
             color=alt.Color("algorithm:N", legend=None),
         )
@@ -102,7 +110,9 @@ def chart_bar_with_error(df: pd.DataFrame, y_title: str, add_tooltip: bool = Fal
     return bars + errs
 
 
-def build_metric_table(metric: str, results_mean: dict, results_std: dict) -> pd.DataFrame:
+def build_metric_table(
+    metric: str, results_mean: dict, results_std: dict
+) -> pd.DataFrame:
     """
     Construye la tabla de resultados para una métrica (media y std).
 
@@ -189,7 +199,9 @@ def draw_metric_tab(
         draw_boxplot(metric, df_long)
 
 
-def render_time_section(results_mean: dict, results_std: dict, key_prefix: str = "") -> None:
+def render_time_section(
+    results_mean: dict, results_std: dict, key_prefix: str = ""
+) -> None:
     """
     Dibuja la sección de tiempos (fit y test) con gráficos de barras.
 
@@ -203,7 +215,7 @@ def render_time_section(results_mean: dict, results_std: dict, key_prefix: str =
     for tab, tmetric in zip(time_tabs, ("fit_time", "test_time")):
         with tab:
             df_t = build_metric_summary_df(tmetric, results_mean, results_std)
-            chart = chart_bar_with_error(df_t, tmetric, add_tooltip=True).properties(
-                height=320
-            )
+            chart = chart_bar_with_error(
+                df_t, tmetric, add_tooltip=True
+            ).properties(height=320)
             st.altair_chart(chart, width="stretch")

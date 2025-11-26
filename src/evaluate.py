@@ -31,7 +31,9 @@ def evaluate_algorithms(
     return results
 
 
-def summarize_means(results: Dict[str, dict], metrics: Iterable[str]) -> Dict[str, Dict[str, float]]:
+def summarize_means(
+    results: Dict[str, dict], metrics: Iterable[str]
+) -> Dict[str, Dict[str, float]]:
     """
     Calcula medias por métrica y algoritmo (RMSE/MSE/MAE/FCP + fit_time/test_time).
 
@@ -57,7 +59,9 @@ def summarize_means(results: Dict[str, dict], metrics: Iterable[str]) -> Dict[st
     return means
 
 
-def summarize_stds(results: Dict[str, dict], metrics: Iterable[str]) -> Dict[str, Dict[str, float]]:
+def summarize_stds(
+    results: Dict[str, dict], metrics: Iterable[str]
+) -> Dict[str, Dict[str, float]]:
     """
     Calcula desviación estándar por métrica y algoritmo (ddof=1).
 

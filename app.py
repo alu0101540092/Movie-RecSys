@@ -40,7 +40,9 @@ def render_dynamic_results(
         render_time_section(results_mean, results_std)
 
 
-def render_static_results(chosen_measures: list[str], include_time: bool) -> None:
+def render_static_results(
+    chosen_measures: list[str], include_time: bool
+) -> None:
     """
     Renders the static results section (ML-32m).
 
@@ -61,7 +63,9 @@ def render_static_results(chosen_measures: list[str], include_time: bool) -> Non
     static_mean, static_std, static_df_long = get_static_results()
 
     if static_df_long.empty:
-        st.error("No se encontraron resultados pre-calculados en results/ml-32m.txt")
+        st.error(
+            "No se encontraron resultados pre-calculados en results/ml-32m.txt"
+        )
         return
 
     static_measures = [m for m in chosen_measures if m in static_mean]
@@ -93,7 +97,9 @@ def main() -> None:
     cv, chosen_measures, include_time, verbose = sidebar_controls(ALL_MEASURES)
 
     if not chosen_measures:
-        st.warning("Por favor, selecciona al menos una métrica en la barra lateral.")
+        st.warning(
+            "Por favor, selecciona al menos una métrica en la barra lateral."
+        )
         return
 
     render_dynamic_results(cv, chosen_measures, include_time, verbose)

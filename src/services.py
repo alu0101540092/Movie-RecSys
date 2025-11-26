@@ -38,7 +38,12 @@ def get_algorithms() -> dict[str, AlgoBase]:
 @st.cache_data(show_spinner="Ejecutando evaluación de algoritmos...")
 def run_evaluation(
     cv: int, measures: tuple[str, ...], verbose: bool, include_time: bool
-) -> tuple[dict[str, dict[str, float]], dict[str, dict[str, float]], dict[str, dict[str, float]], pd.DataFrame]:
+) -> tuple[
+    dict[str, dict[str, float]],
+    dict[str, dict[str, float]],
+    dict[str, dict[str, float]],
+    pd.DataFrame,
+]:
     """
     Runs the evaluation of algorithms with the specified parameters.
 
@@ -61,7 +66,9 @@ def run_evaluation(
     )
     means = summarize_means(results, metrics_to_summarize)
     stds = summarize_stds(results, metrics_to_summarize)
-    df_long = results_to_long_df(results, measures=measures, include_time=include_time)
+    df_long = results_to_long_df(
+        results, measures=measures, include_time=include_time
+    )
     return results, means, stds, df_long
 
 
@@ -142,13 +149,20 @@ def _parse_line_for_metric(
 
     for i, v in enumerate(folds_vals):
         long_rows.append(
-            {"algorithm": algo_name, "metric": metric, "fold": i + 1, "value": v}
+            {
+                "algorithm": algo_name,
+                "metric": metric,
+                "fold": i + 1,
+                "value": v,
+            }
         )
 
 
 def parse_static_results(
     filepath: str,
-) -> tuple[dict[str, dict[str, float]], dict[str, dict[str, float]], pd.DataFrame]:
+) -> tuple[
+    dict[str, dict[str, float]], dict[str, dict[str, float]], pd.DataFrame
+]:
     """
     Parses static results from a file.
 
@@ -187,7 +201,11 @@ def parse_static_results(
 
 
 @st.cache_data
-def get_static_results() -> tuple[dict[str, dict[str, float]], dict[str, dict[str, float]], pd.DataFrame]:
+def get_static_results() -> (
+    tuple[
+        dict[str, dict[str, float]], dict[str, dict[str, float]], pd.DataFrame
+    ]
+):
     """
     Retrieves static results for ML-32m.
 
