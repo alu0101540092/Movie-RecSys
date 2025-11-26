@@ -8,8 +8,18 @@ from src.components import (
 from src.services import run_evaluation, get_static_results
 
 
-# Renderiza la sección de resultados dinámicos (ML-100k).
-def render_dynamic_results(cv, chosen_measures, include_time, verbose):
+def render_dynamic_results(
+    cv: int, chosen_measures: list[str], include_time: bool, verbose: bool
+) -> None:
+    """
+    Renders the dynamic results section (ML-100k).
+
+    Args:
+        cv (int): Number of cross-validation folds.
+        chosen_measures (list[str]): List of selected metrics.
+        include_time (bool): Whether to include execution time.
+        verbose (bool): Whether to show verbose output.
+    """
     st.header("Resultados ML-100k (Dinámico)")
 
     _, results_mean, results_std, df_long = run_evaluation(
@@ -30,8 +40,14 @@ def render_dynamic_results(cv, chosen_measures, include_time, verbose):
         render_time_section(results_mean, results_std)
 
 
-# Renderiza la sección de resultados estáticos (ML-32m).
-def render_static_results(chosen_measures, include_time):
+def render_static_results(chosen_measures: list[str], include_time: bool) -> None:
+    """
+    Renders the static results section (ML-32m).
+
+    Args:
+        chosen_measures (list[str]): List of selected metrics.
+        include_time (bool): Whether to include execution time.
+    """
     st.markdown("---")
     st.header("Resultados ML-32m (Pre-calculados)")
     st.info(
@@ -67,8 +83,10 @@ def render_static_results(chosen_measures, include_time):
         render_time_section(static_mean, static_std, key_prefix="static_")
 
 
-# Función principal que orquesta la aplicación de Streamlit
-def main():
+def main() -> None:
+    """
+    Main function that orchestrates the Streamlit application.
+    """
     configure_streamlit()
 
     ALL_MEASURES = ("RMSE", "MSE", "MAE", "FCP")

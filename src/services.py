@@ -1,6 +1,8 @@
-import streamlit as st  # type: ignore
-import pandas as pd  # type: ignore
+import streamlit as st
+import pandas as pd
 import os
+from typing import Any
+from surprise import AlgoBase, Dataset
 from src.datasets import load_ml100k
 from src.algorithms import default_algorithms
 from src.evaluate import (
@@ -11,23 +13,44 @@ from src.evaluate import (
 )
 
 
-# Cachea y devuelve el dataset MovieLens 100k
 @st.cache_resource
-def get_data():
+def get_data() -> Dataset:
+    """
+    Loads and caches the MovieLens 100k dataset.
+
+    Returns:
+        Dataset: The loaded dataset.
+    """
     return load_ml100k()
 
 
-# Cachea y devuelve el diccionario de algoritmos por defecto
 @st.cache_resource
-def get_algorithms():
+def get_algorithms() -> dict[str, AlgoBase]:
+    """
+    Returns and caches the default algorithms.
+
+    Returns:
+        dict[str, AlgoBase]: A dictionary of algorithms.
+    """
     return default_algorithms()
 
 
-# Ejecuta la evaluación con cache y devuelve resultados, medias, desviaciones y DataFrame largo
 @st.cache_data(show_spinner="Ejecutando evaluación de algoritmos...")
 def run_evaluation(
     cv: int, measures: tuple[str, ...], verbose: bool, include_time: bool
-):
+) -> tuple[dict[str, dict[str, float]], dict[str, dict[str, float]], dict[str, dict[str, float]], pd.DataFrame]:
+    """
+    Runs the evaluation of algorithms with the specified parameters.
+
+    Args:
+        cv (int): Number of cross-validation folds.
+        measures (tuple[str, ...]): Metrics to evaluate.
+        verbose (bool): Whether to print verbose output.
+        include_time (bool): Whether to include execution time in results.
+
+    Returns:
+        tuple: A tuple containing raw results, mean results, standard deviation results, and a long-format DataFrame.
+    """
     data = get_data()
     algorithms = get_algorithms()
     results = evaluate_algorithms(
@@ -42,10 +65,18 @@ def run_evaluation(
     return results, means, stds, df_long
 
 
-# Extrae los valores numéricos (folds, media, std) de una línea de texto.
 def _extract_numeric_values(
     parts: list[str],
 ) -> tuple[list[float], float, float] | None:
+    """
+    Extracts numeric values from a list of string parts.
+
+    Args:
+        parts (list[str]): List of string parts from a line.
+
+    Returns:
+        tuple[list[float], float, float] | None: A tuple containing fold values, mean, and std, or None if extraction fails.
+    """
     try:
         numeric_parts = [
             p
@@ -66,8 +97,23 @@ def _extract_numeric_values(
         return None
 
 
-# Parsea una línea del fichero de resultados para extraer una métrica.
-def _parse_line_for_metric(line, algo_name, results_mean, results_std, long_rows):
+def _parse_line_for_metric(
+    line: str,
+    algo_name: str,
+    results_mean: dict[str, dict[str, float]],
+    results_std: dict[str, dict[str, float]],
+    long_rows: list[dict[str, Any]],
+) -> None:
+    """
+    Parses a line from the results file to extract metric data.
+
+    Args:
+        line (str): The line to parse.
+        algo_name (str): The name of the algorithm.
+        results_mean (dict): Dictionary to store mean results.
+        results_std (dict): Dictionary to store std results.
+        long_rows (list): List to append long-format rows.
+    """
     parts = line.split()
     if not parts:
         return
@@ -100,7 +146,18 @@ def _parse_line_for_metric(line, algo_name, results_mean, results_std, long_rows
         )
 
 
-def parse_static_results(filepath: str):
+def parse_static_results(
+    filepath: str,
+) -> tuple[dict[str, dict[str, float]], dict[str, dict[str, float]], pd.DataFrame]:
+    """
+    Parses static results from a file.
+
+    Args:
+        filepath (str): Path to the results file.
+
+    Returns:
+        tuple: Mean results, std results, and a long-format DataFrame.
+    """
     if not os.path.exists(filepath):
         return {}, {}, pd.DataFrame()
 
@@ -108,9 +165,9 @@ def parse_static_results(filepath: str):
         content = f.read()
 
     metrics = ["RMSE", "MSE", "MAE", "FCP", "fit_time", "test_time"]
-    results_mean = {m: {} for m in metrics}
-    results_std = {m: {} for m in metrics}
-    long_rows = []
+    results_mean: dict[str, dict[str, float]] = {m: {} for m in metrics}
+    results_std: dict[str, dict[str, float]] = {m: {} for m in metrics}
+    long_rows: list[dict[str, Any]] = []
 
     blocks = content.split("Evaluating RMSE, MSE, MAE, FCP of algorithm ")
     for block in blocks:
@@ -130,5 +187,11 @@ def parse_static_results(filepath: str):
 
 
 @st.cache_data
-def get_static_results():
+def get_static_results() -> tuple[dict[str, dict[str, float]], dict[str, dict[str, float]], pd.DataFrame]:
+    """
+    Retrieves static results for ML-32m.
+
+    Returns:
+        tuple: Mean results, std results, and a long-format DataFrame.
+    """
     return parse_static_results("results/ml-32m.txt")
