@@ -3,7 +3,10 @@ import hashlib
 import pandas as pd
 from datetime import datetime
 
-DB_PATH = "movie_recsys.db"
+import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DB_PATH = os.path.join(BASE_DIR, "data", "movie_recsys.db")
 
 
 def get_db_connection():

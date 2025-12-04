@@ -6,7 +6,8 @@ from surprise.model_selection import train_test_split
 from src.data_loader import load_ratings, load_movies
 from src.database import get_user_ratings
 
-MODEL_PATH = "svd_model.pkl"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MODEL_PATH = os.path.join(BASE_DIR, "models", "svd_model.pkl")
 
 
 def train_model():
@@ -35,7 +36,10 @@ def train_model():
 def load_model():
     if os.path.exists(MODEL_PATH):
         with open(MODEL_PATH, "rb") as f:
-            return pickle.load(f)
+            data = pickle.load(f)
+            if isinstance(data, dict) and "algo" in data:
+                return data["algo"]
+            return data
     else:
         return train_model()
 

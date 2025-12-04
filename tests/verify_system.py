@@ -12,7 +12,7 @@ from src.database import (
     get_user_ratings,
 )
 from src.data_loader import load_movies, search_movies
-from src.model import get_recommendations, train_model
+from src.model import get_recommendations, train_model, MODEL_PATH
 
 
 def test_system():
@@ -56,7 +56,7 @@ def test_system():
 
     print("6. Generating Recommendations...")
     # Force train if needed (might take a moment)
-    if not os.path.exists("svd_model.pkl"):
+    if not os.path.exists(MODEL_PATH):
         train_model()
 
     recs = get_recommendations(user["id"], n=5)
