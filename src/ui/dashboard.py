@@ -10,6 +10,17 @@ def render_search_tab():
 
     query = st.text_input("Buscar por título o género")
 
+    # Initialize session state for pagination
+    if "search_page" not in st.session_state:
+        st.session_state["search_page"] = 0
+    if "last_query" not in st.session_state:
+        st.session_state["last_query"] = ""
+
+    # Reset pagination if query changes
+    if query != st.session_state["last_query"]:
+        st.session_state["search_page"] = 0
+        st.session_state["last_query"] = query
+
     # Load movies (cached)
     movies_df = load_movies()
 
@@ -18,11 +29,26 @@ def render_search_tab():
     if results.empty:
         st.info("No se encontraron películas.")
     else:
-        # Pagination or limit
-        st.write(f"Mostrando {len(results)} resultados:")
+        # Pagination settings
+        ITEMS_PER_PAGE = 10
+        total_results = len(results)
+        total_pages = (total_results + ITEMS_PER_PAGE - 1) // ITEMS_PER_PAGE
+        
+        # Ensure current page is valid
+        if st.session_state["search_page"] >= total_pages:
+             st.session_state["search_page"] = max(0, total_pages - 1)
+        
+        current_page = st.session_state["search_page"]
+        start_idx = current_page * ITEMS_PER_PAGE
+        end_idx = min(start_idx + ITEMS_PER_PAGE, total_results)
+        
+        st.write(f"Mostrando {start_idx + 1}-{end_idx} de {total_results} resultados:")
+        
+        # Slice results
+        page_results = results.iloc[start_idx:end_idx]
 
         # Display as a list/grid
-        for index, row in results.iterrows():
+        for index, row in page_results.iterrows():
             with st.expander(f"{row['title']} ({row['genres']})"):
                 # Rating slider
                 rating = st.slider(
@@ -40,6 +66,19 @@ def render_search_tab():
                     st.success(
                         f"Valoraste '{row['title']}' con {rating} estrellas."
                     )
+        
+        # Pagination Controls
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col1:
+            if current_page > 0:
+                if st.button("Anterior"):
+                    st.session_state["search_page"] -= 1
+                    st.rerun()
+        with col3:
+            if current_page < total_pages - 1:
+                if st.button("Siguiente"):
+                    st.session_state["search_page"] += 1
+                    st.rerun()
 
 
 def render_recommendations_tab():
