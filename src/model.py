@@ -77,7 +77,9 @@ def fold_in_user(user_ratings_df, qi, bi, global_mean, mappings, n_epochs=100, l
     """
     n_factors = qi.shape[1]
     # Initialize with small random values to break symmetry
-    pu = np.random.normal(0, 0.1, n_factors)
+    # Use a fixed seed to ensure determinism for the same input
+    rng = np.random.RandomState(42)
+    pu = rng.normal(0, 0.1, n_factors)
     bu = 0.0
 
     # Prepare training samples from user ratings
