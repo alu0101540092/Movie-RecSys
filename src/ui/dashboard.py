@@ -3,6 +3,7 @@ import pandas as pd
 from src.data_loader import load_movies, search_movies
 from src.database import add_rating, get_user_ratings, delete_user
 from src.model import get_recommendations
+from src.utils import translate_genres, get_spanish_genres_list, get_english_genre
 
 
 def render_search_tab():
@@ -49,7 +50,7 @@ def render_search_tab():
 
         # Display as a list/grid
         for index, row in page_results.iterrows():
-            with st.expander(f"{row['title']} ({row['genres']})"):
+            with st.expander(f"{row['title']} ({translate_genres(row['genres'])})"):
                 # Rating slider
                 rating = st.slider(
                     "Tu valoración",
@@ -90,19 +91,16 @@ def render_recommendations_tab():
     
     with col1:
         # Load unique genres for selector
-        movies_df = load_movies()
-        # Collect all unique genres
-        unique_genres = set()
-        for g_str in movies_df['genres'].dropna():
-            if g_str != "(no genres listed)":
-                unique_genres.update(g_str.split('|'))
-        sorted_genres = sorted(list(unique_genres))
+        sorted_genres = get_spanish_genres_list()
         
-        selected_genres = st.multiselect(
+        selected_genres_es = st.multiselect(
             "¿Qué te apetece ver hoy? (Opcional)",
             sorted_genres,
             default=[]
         )
+        
+        # Convert back to English for model query
+        selected_genres = [get_english_genre(g) for g in selected_genres_es]
         
     with col2:
         alpha = st.slider(
@@ -131,7 +129,7 @@ def render_recommendations_tab():
         else:
             for rec in recs:
                 st.subheader(f"{rec['title']}")
-                st.caption(f"Géneros: {rec['genres']}")
+                st.caption(f"Géneros: {translate_genres(rec['genres'])}")
                 
                 # Display Score
                 col_score, col_hybrid = st.columns(2)
@@ -158,9 +156,29 @@ def render_profile_tab():
         merged = user_ratings.merge(
             movies_df, left_on="movie_id", right_on="movieId"
         )
-        # Reset index to start at 1 for display
+        # Rename columns
+        merged = merged.rename(columns={
+            "title": "Título",
+            "rating": "Puntuación", 
+            "genres": "Géneros"
+        })
+        
+        merged["Géneros"] = merged["Géneros"].apply(translate_genres)
+        
+        # Reset index to start at 1 and set name
         merged.index = range(1, len(merged) + 1)
-        st.dataframe(merged[["title", "rating", "genres"]])
+        merged.index.name = "Nº"
+        
+        # Select and display with styling
+        st.dataframe(
+            merged[["Título", "Puntuación", "Géneros"]].style
+            .format({"Puntuación": "{:.1f}"})
+            .set_properties(subset=["Título", "Puntuación"], **{'text-align': 'center'})
+            .set_table_styles([
+                {'selector': 'th', 'props': [('text-align', 'center')]}
+            ]),
+            use_container_width=True
+        )
     else:
         st.info("Aún no has valorado ninguna película.")
 

@@ -1,5 +1,6 @@
 import streamlit as st
 from src.database import create_user, authenticate_user
+from src.utils import get_spanish_genres_list, get_english_genre
 
 
 def render_login():
@@ -29,27 +30,10 @@ def render_register():
         password = st.text_input("Contraseña", type="password")
 
         # Genre selection
-        genres = [
-            "Action",
-            "Adventure",
-            "Animation",
-            "Children",
-            "Comedy",
-            "Crime",
-            "Documentary",
-            "Drama",
-            "Fantasy",
-            "Film-Noir",
-            "Horror",
-            "Musical",
-            "Mystery",
-            "Romance",
-            "Sci-Fi",
-            "Thriller",
-            "War",
-            "Western",
-        ]
-        favorite_genres = st.multiselect("Géneros Favoritos", genres)
+        genres = get_spanish_genres_list()
+        favorite_genres_es = st.multiselect("Géneros Favoritos", genres)
+        # Map back to English for storage
+        favorite_genres = [get_english_genre(g) for g in favorite_genres_es]
 
         submit = st.form_submit_button("Crear Cuenta")
 

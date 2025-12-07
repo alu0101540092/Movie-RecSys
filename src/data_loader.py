@@ -44,10 +44,31 @@ def search_movies(query, movies_df):
     if not query:
         return movies_df.head(20)
 
+    # Convert potential Spanish genre in query to English
+    # Import locally to avoid circular import if utils imports data_loader (it doesn't, but safety first or move import top)
+    # Actually utils doesn't import data_loader. Safe to import at top. 
+    # But let's check if we can import at top. 
+    # For now, I'll do a local import or standard import if I add it to top.
+    from src.utils import get_english_genre
+    
+    # Try to map the whole query as a genre
+    # (Simple approach: if query matches a Spanish genre, use the English version)
+    query_as_english_genre = get_english_genre(query.strip().title()) 
+    
+    # If the mapping returned something different, it means it was a known Spanish genre
+    # Use that for the genre search part.
+    # Keep original query for title search.
+    
+    search_term = query_as_english_genre if query_as_english_genre != query.strip().title() else query
+
     # Simple case-insensitive search in title and genres
+    # If search_term differs from query, it means we detected a genre. 
+    # We search for that genre in 'genres' OR the original query in 'title'.
+    
     mask = movies_df["title"].str.contains(
         query, case=False, na=False
-    ) | movies_df["genres"].str.contains(query, case=False, na=False)
+    ) | movies_df["genres"].str.contains(search_term, case=False, na=False)
+    
     return movies_df[mask]
 
 
