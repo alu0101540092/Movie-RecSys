@@ -214,12 +214,11 @@ def get_recommendations(user_id, n=10, selected_genres=None, alpha=0.5):
                 if g_str and g_str != "(no genres listed)":
                     # Calculate Jaccard or simple overlap
                     m_genres = set(g_str.split('|'))
-                    if m_genres:
+                    if m_genres and target_genres:
                         intersection = len(m_genres.intersection(target_genres))
-                        # Use simple intersection ratio like the user snippet
-                        # User snippet: intersection / len(movie_genres)
-                        # This favors movies with FEW genres that match.
-                        score = intersection / len(m_genres)
+                        # Use Coverage metric: intersection / len(target_genres)
+                        # This ensures multi-genre movies aren't penalized if they match the request.
+                        score = intersection / len(target_genres)
                         genre_scores[inner_id] = score
             
             # Combine scores
