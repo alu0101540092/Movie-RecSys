@@ -70,7 +70,7 @@ def load_optimized_components():
     except FileNotFoundError:
         return None
 
-def fold_in_user(user_ratings_df, qi, bi, global_mean, mappings, n_epochs=20, lr=0.005, reg=0.02):
+def fold_in_user(user_ratings_df, qi, bi, global_mean, mappings, n_epochs=100, lr=0.01, reg=0.05):
     """
     Optimizes the user latent factors (pu) and user bias (bu) for a specific user
     based on their current ratings, performing a mini SGD 'fold-in' at runtime.
@@ -90,17 +90,26 @@ def fold_in_user(user_ratings_df, qi, bi, global_mean, mappings, n_epochs=20, lr
         raw_id = row['movie_id']
         inner_id = None
         
-        # Try direct lookup, string conversion, and int conversion
+        # Robust lookup: handle int, string, float-as-int
+        # 1. Direct lookup
         if raw_id in item_map:
-             inner_id = item_map[raw_id]
-        elif str(raw_id) in item_map:
-             inner_id = item_map[str(raw_id)]
+            inner_id = item_map[raw_id]
         else:
-             try:
-                 if int(raw_id) in item_map:
-                     inner_id = item_map[int(raw_id)]
-             except (ValueError, TypeError):
-                 pass
+            # 2. String lookup
+            s_id = str(raw_id)
+            if s_id in item_map:
+                inner_id = item_map[s_id]
+            else:
+                # 3. Int -> String lookup (handles 1.0 -> '1')
+                try:
+                    int_id = int(raw_id)
+                    s_int_id = str(int_id)
+                    if int_id in item_map:
+                        inner_id = item_map[int_id]
+                    elif s_int_id in item_map:
+                        inner_id = item_map[s_int_id]
+                except (ValueError, TypeError):
+                    pass
                  
         if inner_id is not None:
             samples.append((inner_id, float(row['rating'])))
