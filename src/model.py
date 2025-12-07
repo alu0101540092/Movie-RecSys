@@ -57,11 +57,11 @@ def load_optimized_components():
         join_file(os.path.join(MODELS_DIR, filename))
 
     try:
-        pu = np.load(os.path.join(MODELS_DIR, 'svd_pu.npy'), mmap_mode='r')
-        qi = np.load(os.path.join(MODELS_DIR, 'svd_qi.npy'), mmap_mode='r')
-        bu = np.load(os.path.join(MODELS_DIR, 'svd_bu.npy'), mmap_mode='r')
-        bi = np.load(os.path.join(MODELS_DIR, 'svd_bi.npy'), mmap_mode='r')
-        global_mean = np.load(os.path.join(MODELS_DIR, 'svd_global_mean.npy'))[0]
+        pu = np.load(os.path.join(MODELS_DIR, 'svd_pu.npy'), mmap_mode='r', allow_pickle=True)
+        qi = np.load(os.path.join(MODELS_DIR, 'svd_qi.npy'), mmap_mode='r', allow_pickle=True)
+        bu = np.load(os.path.join(MODELS_DIR, 'svd_bu.npy'), mmap_mode='r', allow_pickle=True)
+        bi = np.load(os.path.join(MODELS_DIR, 'svd_bi.npy'), mmap_mode='r', allow_pickle=True)
+        global_mean = np.load(os.path.join(MODELS_DIR, 'svd_global_mean.npy'), allow_pickle=True)[0]
         
         with open(os.path.join(MODELS_DIR, 'svd_mappings.pkl'), 'rb') as f:
             mappings = pickle.load(f)
