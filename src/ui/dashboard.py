@@ -164,10 +164,25 @@ def render_profile_tab():
 
     st.markdown("---")
     st.subheader("Zona de Peligro")
-    if st.button("Eliminar Cuenta", type="primary"):
-        delete_user(st.session_state["user_id"])
-        st.session_state.clear()
-        st.rerun()
+    if "confirm_delete" not in st.session_state:
+        st.session_state["confirm_delete"] = False
+
+    if not st.session_state["confirm_delete"]:
+        if st.button("Eliminar Cuenta", type="primary"):
+            st.session_state["confirm_delete"] = True
+            st.rerun()
+    else:
+        st.warning("¿Estás seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer.")
+        col_conf1, col_conf2 = st.columns(2)
+        with col_conf1:
+            if st.button("Sí, eliminar", type="primary"):
+                delete_user(st.session_state["user_id"])
+                st.session_state.clear()
+                st.rerun()
+        with col_conf2:
+            if st.button("Cancelar"):
+                st.session_state["confirm_delete"] = False
+                st.rerun()
 
 
 def dashboard_page():
