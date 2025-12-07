@@ -3,14 +3,24 @@ import pandas as pd
 import urllib.request
 import zipfile
 import io
+import sys
+
+# Add project root to path to import scripts
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from scripts.file_manager import join_file
 
 DATASET_URL = "https://files.grouplens.org/datasets/movielens/ml-32m.zip"
 DATA_DIR = "datasets"
 MOVIES_FILE = os.path.join(DATA_DIR, "ml-32m", "movies.csv")
 RATINGS_FILE = os.path.join(DATA_DIR, "ml-32m", "ratings.csv")
+TAGS_FILE = os.path.join(DATA_DIR, "ml-32m", "tags.csv")
 
 
 def ensure_dataset_exists():
+    # Check if we need to reconstruct files from parts
+    join_file(RATINGS_FILE)
+    join_file(TAGS_FILE)
+
     if not os.path.exists(MOVIES_FILE) or not os.path.exists(RATINGS_FILE):
         print("Downloading dataset...")
         os.makedirs(DATA_DIR, exist_ok=True)

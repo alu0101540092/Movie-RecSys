@@ -7,6 +7,10 @@ from surprise.model_selection import train_test_split
 from src.data_loader import load_ratings, load_movies
 from src.database import get_user_ratings
 
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from scripts.file_manager import join_file
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_PATH = os.path.join(BASE_DIR, "models", "svd_model.pkl")
 MODELS_DIR = os.path.join(BASE_DIR, "models")
@@ -48,6 +52,10 @@ def load_model():
 
 def load_optimized_components():
     """Load optimized model components using memory mapping."""
+    # Ensure all components are ready (reconstructed if needed)
+    for filename in ['svd_pu.npy', 'svd_qi.npy', 'svd_bu.npy', 'svd_bi.npy', 'svd_global_mean.npy']:
+        join_file(os.path.join(MODELS_DIR, filename))
+
     try:
         pu = np.load(os.path.join(MODELS_DIR, 'svd_pu.npy'), mmap_mode='r')
         qi = np.load(os.path.join(MODELS_DIR, 'svd_qi.npy'), mmap_mode='r')
