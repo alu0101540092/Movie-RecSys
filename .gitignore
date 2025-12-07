@@ -214,3 +214,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+# Large files split into parts
+datasets/ml-32m/ratings.csv
+datasets/ml-32m/tags.csv
+models/*.npy
