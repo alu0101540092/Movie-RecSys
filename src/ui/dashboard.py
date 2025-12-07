@@ -173,7 +173,8 @@ def render_profile_tab():
             st.rerun()
     else:
         st.warning("¿Estás seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer.")
-        col_conf1, col_conf2 = st.columns(2)
+        # Adjust column weights to keep buttons closer without being stuck
+        col_conf1, col_conf2, _ = st.columns([1, 1, 4])
         with col_conf1:
             if st.button("Sí, eliminar", type="primary"):
                 delete_user(st.session_state["user_id"])
