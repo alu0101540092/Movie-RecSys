@@ -158,6 +158,8 @@ def render_profile_tab():
         merged = user_ratings.merge(
             movies_df, left_on="movie_id", right_on="movieId"
         )
+        # Reset index to start at 1 for display
+        merged.index = range(1, len(merged) + 1)
         st.dataframe(merged[["title", "rating", "genres"]])
     else:
         st.info("Aún no has valorado ninguna película.")
