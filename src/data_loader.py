@@ -4,12 +4,10 @@ import urllib.request
 import zipfile
 import io
 
-DATASET_URL = (
-    "https://files.grouplens.org/datasets/movielens/ml-latest-small.zip"
-)
+DATASET_URL = "https://files.grouplens.org/datasets/movielens/ml-32m.zip"
 DATA_DIR = "datasets"
-MOVIES_FILE = os.path.join(DATA_DIR, "ml-latest-small", "movies.csv")
-RATINGS_FILE = os.path.join(DATA_DIR, "ml-latest-small", "ratings.csv")
+MOVIES_FILE = os.path.join(DATA_DIR, "ml-32m", "movies.csv")
+RATINGS_FILE = os.path.join(DATA_DIR, "ml-32m", "ratings.csv")
 
 
 def ensure_dataset_exists():
