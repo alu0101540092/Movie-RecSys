@@ -84,9 +84,45 @@ def render_search_tab():
 def render_recommendations_tab():
     st.header("Recomendaciones para Ti")
 
-    if st.button("Generar Recomendaciones"):
+    # --- UI Controls for Hybrid Recommendations ---
+    st.subheader("Preferencias de Recomendación")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Load unique genres for selector
+        movies_df = load_movies()
+        # Collect all unique genres
+        unique_genres = set()
+        for g_str in movies_df['genres'].dropna():
+            if g_str != "(no genres listed)":
+                unique_genres.update(g_str.split('|'))
+        sorted_genres = sorted(list(unique_genres))
+        
+        selected_genres = st.multiselect(
+            "¿Qué te apetece ver hoy? (Opcional)",
+            sorted_genres,
+            default=[]
+        )
+        
+    with col2:
+        alpha = st.slider(
+            "Balance: Género vs. Calidad",
+            min_value=0.0,
+            max_value=1.0,
+            value=0.5,
+            step=0.1,
+            help="0.0 = Solo importa el género. 1.0 = Solo importa la calidad (SVD)."
+        )
+        st.caption(f"Peso Calidad: {alpha*100:.0f}% | Peso Género: {(1-alpha)*100:.0f}%")
+
+    if st.button("Generar Recomendaciones", type="primary"):
         with st.spinner("Calculando recomendaciones..."):
-            recs = get_recommendations(st.session_state["user_id"])
+            recs = get_recommendations(
+                st.session_state["user_id"], 
+                n=10, 
+                selected_genres=selected_genres, 
+                alpha=alpha
+            )
 
         if not recs:
             st.info(
@@ -96,7 +132,17 @@ def render_recommendations_tab():
             for rec in recs:
                 st.subheader(f"{rec['title']}")
                 st.caption(f"Géneros: {rec['genres']}")
-                st.write(f"Predicción: {rec['score']:.2f}/5.0")
+                
+                # Display Score
+                col_score, col_hybrid = st.columns(2)
+                with col_score:
+                     st.metric("Predicción", f"{rec['score']:.2f}/5.0")
+                     
+                with col_hybrid:
+                     # Only show hybrid score if relevant (genres selected)
+                     if selected_genres:
+                         st.metric("Score Híbrido", f"{rec['hybrid_score']:.2f}")
+                
                 st.markdown("---")
 
 

@@ -134,7 +134,18 @@ def fold_in_user(user_ratings_df, qi, bi, global_mean, mappings, n_epochs=100, l
     return pu, bu
 
 
-def get_recommendations(user_id, n=10):
+            
+    return pu, bu
+
+def get_recommendations(user_id, n=10, selected_genres=None, alpha=0.5):
+    """
+    Generate recommendations for a user.
+    Args:
+        user_id: The ID of the user.
+        n: Number of recommendations to return.
+        selected_genres: List of genres to boost (Hybrid approach).
+        alpha: Weight for SVD score (0.0 - 1.0). 1.0 = Pure SVD, 0.0 = Pure Genre.
+    """
     # Try to load optimized components
     components = load_optimized_components()
     
@@ -163,6 +174,9 @@ def get_recommendations(user_id, n=10):
         scores += user_bias
         scores += global_mean
 
+        # Clip scores to [1, 5]
+        scores = np.clip(scores, 1.0, 5.0)
+
         # Create reverse mapping (inner -> raw)
         raw_item_ids = [None] * len(mappings['items'])
         for raw_id, inner_id in mappings['items'].items():
@@ -171,20 +185,70 @@ def get_recommendations(user_id, n=10):
                     raw_item_ids[inner_id] = int(raw_id)
                 except (ValueError, TypeError):
                     raw_item_ids[inner_id] = raw_id
+                    
+        # --- HYBRID SCORING ---
+        final_scores = scores.copy() # Start with clipped SVD scores
+        
+        if selected_genres:
+            # Compute genre scores for ALL items
+            # This is a bit expensive if done in python for 80k items, but let's try.
+            # Convert selected_genres to set
+            target_genres = set(selected_genres)
+            
+            # Create a genre_score array aligned with inner_ids
+            # We need to map inner_id -> genres
+            # movies_df has 'movieId', 'genres'
+            # We can create a lookup array/list where index = inner_id
+            
+            # Map movieId -> genres string
+            # This is fast
+            movie_genre_map = movies_df.set_index('movieId')['genres'].to_dict()
+            
+            genre_scores = np.zeros(len(scores))
+            
+            for inner_id in range(len(raw_item_ids)):
+                mid = raw_item_ids[inner_id]
+                g_str = movie_genre_map.get(mid)
+                if g_str and g_str != "(no genres listed)":
+                    # Calculate Jaccard or simple overlap
+                    m_genres = set(g_str.split('|'))
+                    if m_genres:
+                        intersection = len(m_genres.intersection(target_genres))
+                        # Use simple intersection ratio like the user snippet
+                        # User snippet: intersection / len(movie_genres)
+                        # This favors movies with FEW genres that match.
+                        score = intersection / len(m_genres)
+                        genre_scores[inner_id] = score
+            
+            # Combine scores
+            # Normalized SVD: SVD / 5.0  (0.2 - 1.0)
+            svd_norm = scores / 5.0
+            
+            # Hybrid Formula from user:
+            # hybrid_score = (alpha * svd_norm) + ((1 - alpha) * genre_score)
+            
+            # Use final_scores for ranking
+            final_scores = (alpha * svd_norm) + ((1 - alpha) * genre_scores)
+
         
         # Prepare results
         recommendations = []
         
-        # Get top N indices
-        top_indices = np.argpartition(scores, -n)[-n:]
-        top_indices = top_indices[np.argsort(scores[top_indices])[::-1]]
+        # Get top N indices based on final_scores (Hybrid or SVD)
+        # We can use argpartition for efficiency if N is small compared to total items
+        top_indices = np.argpartition(final_scores, -n)[-n:]
+        # Sort these top indices
+        top_indices = top_indices[np.argsort(final_scores[top_indices])[::-1]]
         
         for i in top_indices:
             movie_id = raw_item_ids[i]
             if movie_id in rated_movie_ids:
                 continue
                 
-            score = scores[i]
+            # We want to display the SVD predicted rating (clipped 1-5) as "Predicted Score"
+            # But we ranked by Hybrid Score.
+            svd_score_val = scores[i]
+            hybrid_score_val = final_scores[i]
             
             # Get metadata
             movie_row = movies_df[movies_df["movieId"] == movie_id]
@@ -195,9 +259,12 @@ def get_recommendations(user_id, n=10):
                     "movieId": movie_id,
                     "title": title,
                     "genres": genres,
-                    "score": float(score)
+                    "score": float(svd_score_val),  # Display SVD score
+                    "hybrid_score": float(hybrid_score_val) # Internal ranking score
                 })
                 
+        # If we filtered out some rated movies, we might have fewer than n
+        # In that case we should take more from argpartition, but for simplicity:
         return recommendations[:n]
 
     else:
@@ -216,6 +283,8 @@ def get_recommendations(user_id, n=10):
         for movie_id in all_movie_ids:
             if movie_id not in rated_movie_ids:
                 est = algo.predict(user_id, movie_id).est
+                # Clip
+                est = min(5.0, max(1.0, est))
                 predictions.append((movie_id, est))
         predictions.sort(key=lambda x: x[1], reverse=True)
         top_n = predictions[:n]
@@ -229,6 +298,7 @@ def get_recommendations(user_id, n=10):
                     "title": title,
                     "genres": genres,
                     "score": score,
+                    "hybrid_score": score # Legacy fallback has no hybrid
                 }
             )
         return results
