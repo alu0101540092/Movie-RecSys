@@ -128,9 +128,32 @@ def get_user_ratings(user_id):
     return df
 
 
+
 def get_all_ratings():
     conn = get_db_connection()
     query = "SELECT user_id, movie_id, rating, timestamp FROM ratings"
     df = pd.read_sql_query(query, conn)
     conn.close()
     return df
+
+
+def get_user_genres(user_id):
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute("SELECT favorite_genres FROM users WHERE id = ?", (user_id,))
+    result = c.fetchone()
+    conn.close()
+    if result and result["favorite_genres"]:
+        return result["favorite_genres"].split(",")
+    return []
+
+
+def update_user_genres(user_id, genres):
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute(
+        "UPDATE users SET favorite_genres = ? WHERE id = ?",
+        (",".join(genres), user_id),
+    )
+    conn.commit()
+    conn.close()

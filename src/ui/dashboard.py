@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from src.data_loader import load_movies, search_movies
-from src.database import add_rating, get_user_ratings, delete_user
+from src.database import add_rating, get_user_ratings, delete_user, get_user_genres, update_user_genres
 from src.model import get_recommendations
 from src.utils import translate_genres, get_spanish_genres_list, get_english_genre
 
@@ -164,6 +164,34 @@ def render_profile_tab():
         st.info("Aún no has valorado ninguna película.")
 
     st.markdown("---")
+    st.subheader("Géneros Favoritos")
+    
+    # Load available genres and user's current genres
+    available_genres = get_spanish_genres_list()
+    current_genres_en = get_user_genres(st.session_state["user_id"])
+    
+    # Convert current English genres to Spanish for display/selection
+    current_genres_es = [translate_genres(g) for g in current_genres_en]
+    # Handle potentially malformed or empty translations that might not be in available_genres
+    # filter just in case
+    current_genres_es = [g for g in current_genres_es if g in available_genres]
+
+    selected_genres_es = st.multiselect(
+        "Edita tus géneros preferidos:",
+        available_genres,
+        default=current_genres_es
+    )
+
+    if st.button("Guardar Géneros"):
+        # Convert back to English for storage
+        new_genres_en = [get_english_genre(g) for g in selected_genres_es]
+        update_user_genres(st.session_state["user_id"], new_genres_en)
+        st.success("¡Géneros actualizados correctamente!")
+        # Optional: rerun to ensure state is consistent if we use this elsewhere immediately
+        # st.rerun()
+
+    st.markdown("---")
+
     st.subheader("Zona de Peligro")
     if "confirm_delete" not in st.session_state:
         st.session_state["confirm_delete"] = False
