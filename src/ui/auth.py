@@ -46,7 +46,7 @@ def render_register():
                 else:
                     st.error("El usuario o email ya existe.")
             else:
-                st.error("Por favor completa todos los campos.")
+                st.error("Por favor, completa todos los campos.")
 
 
 def auth_page():

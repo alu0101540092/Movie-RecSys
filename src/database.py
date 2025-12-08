@@ -46,6 +46,17 @@ def init_db():
         )
     """
     )
+    
+    # Check if timestamp column exists (migration for existing DBs)
+    c.execute("PRAGMA table_info(ratings)")
+    columns = [info[1] for info in c.fetchall()]
+    if "timestamp" not in columns:
+        print("Migrating database: Adding timestamp column to ratings table...")
+        c.execute("ALTER TABLE ratings ADD COLUMN timestamp INTEGER")
+        # Optional: Backfill with current time for existing ratings
+        current_time = int(datetime.now().timestamp())
+        c.execute("UPDATE ratings SET timestamp = ? WHERE timestamp IS NULL", (current_time,))
+        print("Migration completed.")
 
     conn.commit()
     conn.close()
@@ -111,7 +122,7 @@ def add_rating(user_id, movie_id, rating):
 
 def get_user_ratings(user_id):
     conn = get_db_connection()
-    query = "SELECT movie_id, rating FROM ratings WHERE user_id = ?"
+    query = "SELECT movie_id, rating, timestamp FROM ratings WHERE user_id = ?"
     df = pd.read_sql_query(query, conn, params=(user_id,))
     conn.close()
     return df

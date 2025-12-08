@@ -52,21 +52,21 @@ def render_search_tab():
         for index, row in page_results.iterrows():
             with st.expander(f"{row['title']} ({translate_genres(row['genres'])})"):
                 # Rating slider
-                rating = st.slider(
-                    "Tu valoración",
-                    1.0,
-                    5.0,
-                    3.0,
-                    0.5,
-                    key=f"rate_{row['movieId']}",
-                )
+                # Integer rating (1-5 stars)
+                # st.feedback returns 0-4
+                rating_idx = st.feedback("stars", key=f"rate_{row['movieId']}")
+                
                 if st.button("Enviar Valoración", key=f"btn_{row['movieId']}"):
-                    add_rating(
-                        st.session_state["user_id"], row["movieId"], rating
-                    )
-                    st.success(
-                        f"Valoraste '{row['title']}' con {rating} estrellas."
-                    )
+                    if rating_idx is not None:
+                        final_rating = rating_idx + 1
+                        add_rating(
+                            st.session_state["user_id"], row["movieId"], final_rating
+                        )
+                        st.success(
+                            f"Valoraste '{row['title']}' con {final_rating} estrellas."
+                        )
+                    else:
+                        st.warning("Por favor, selecciona una puntuación antes de enviar.")
         
         # Pagination Controls
         col1, col2, col3 = st.columns([1, 2, 1])
@@ -87,31 +87,18 @@ def render_recommendations_tab():
 
     # --- UI Controls for Hybrid Recommendations ---
     st.subheader("Preferencias de Recomendación")
-    col1, col2 = st.columns(2)
     
-    with col1:
-        # Load unique genres for selector
-        sorted_genres = get_spanish_genres_list()
-        
-        selected_genres_es = st.multiselect(
-            "¿Qué te apetece ver hoy? (Opcional)",
-            sorted_genres,
-            default=[]
-        )
-        
-        # Convert back to English for model query
-        selected_genres = [get_english_genre(g) for g in selected_genres_es]
-        
-    with col2:
-        alpha = st.slider(
-            "Balance: Género vs. Calidad",
-            min_value=0.0,
-            max_value=1.0,
-            value=0.5,
-            step=0.1,
-            help="0.0 = Solo importa el género. 1.0 = Solo importa la calidad (SVD)."
-        )
-        st.caption(f"Peso Calidad: {alpha*100:.0f}% | Peso Género: {(1-alpha)*100:.0f}%")
+    # Load unique genres for selector
+    sorted_genres = get_spanish_genres_list()
+    
+    selected_genres_es = st.multiselect(
+        "¿Qué te apetece ver hoy? (Opcional)",
+        sorted_genres,
+        default=[]
+    )
+    
+    # Convert back to English for model query
+    selected_genres = [get_english_genre(g) for g in selected_genres_es]
 
     if st.button("Generar Recomendaciones", type="primary"):
         with st.spinner("Calculando recomendaciones..."):
@@ -119,7 +106,7 @@ def render_recommendations_tab():
                 st.session_state["user_id"], 
                 n=10, 
                 selected_genres=selected_genres, 
-                alpha=alpha
+                alpha=0.5 # Fixed alpha
             )
 
         if not recs:
@@ -130,17 +117,6 @@ def render_recommendations_tab():
             for rec in recs:
                 st.subheader(f"{rec['title']}")
                 st.caption(f"Géneros: {translate_genres(rec['genres'])}")
-                
-                # Display Score
-                col_score, col_hybrid = st.columns(2)
-                with col_score:
-                     st.metric("Predicción", f"{rec['score']:.2f}/5.0")
-                     
-                with col_hybrid:
-                     # Only show hybrid score if relevant (genres selected)
-                     if selected_genres:
-                         st.metric("Score Híbrido", f"{rec['hybrid_score']:.2f}")
-                
                 st.markdown("---")
 
 
@@ -156,6 +132,11 @@ def render_profile_tab():
         merged = user_ratings.merge(
             movies_df, left_on="movie_id", right_on="movieId"
         )
+        
+        # Sort by timestamp descending (newest first)
+        if "timestamp" in merged.columns:
+            merged = merged.sort_values(by="timestamp", ascending=False)
+        
         # Rename columns
         merged = merged.rename(columns={
             "title": "Título",
