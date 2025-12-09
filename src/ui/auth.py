@@ -31,7 +31,7 @@ def render_register():
 
         # Genre selection
         genres = get_spanish_genres_list()
-        favorite_genres_es = st.multiselect("Géneros Favoritos", genres)
+        favorite_genres_es = st.multiselect("Géneros Favoritos", genres, placeholder="Elige una opción")
         # Map back to English for storage
         favorite_genres = [get_english_genre(g) for g in favorite_genres_es]
 

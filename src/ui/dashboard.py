@@ -94,7 +94,8 @@ def render_recommendations_tab():
     selected_genres_es = st.multiselect(
         "¿Qué te apetece ver hoy? (Opcional)",
         sorted_genres,
-        default=[]
+        default=[],
+        placeholder="Elige una opción"
     )
     
     # Convert back to English for model query
@@ -153,7 +154,7 @@ def render_profile_tab():
         # Select and display with styling
         st.dataframe(
             merged[["Título", "Puntuación", "Géneros"]].style
-            .format({"Puntuación": "{:.1f}"})
+            .format({"Puntuación": "{:.0f}"})
             .set_properties(subset=["Título", "Puntuación"], **{'text-align': 'center'})
             .set_table_styles([
                 {'selector': 'th', 'props': [('text-align', 'center')]}
@@ -179,7 +180,8 @@ def render_profile_tab():
     selected_genres_es = st.multiselect(
         "Edita tus géneros preferidos:",
         available_genres,
-        default=current_genres_es
+        default=current_genres_es,
+        placeholder="Elige una opción"
     )
 
     if st.button("Guardar Géneros"):
