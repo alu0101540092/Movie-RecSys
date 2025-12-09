@@ -1,126 +1,74 @@
-# Movie-RecSys
+# Sistema Inteligente de Recomendación de Películas
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://movies-recsys.streamlit.app)
 
-## Ejecución con Docker Compose
+- **Universidad de La Laguna**
+- **Grado de Ingeniería en Informática**
+- **Asignatura:** Sistemas Inteligentes
+- **Curso:** 2025-26
+- **Autores:** Carolina Acosta Acosta, Samuel Frías Hernández, Salvador González Cueto
+- **Tutora del proyecto:** Elena Sánchez Nielsen
 
-Este proyecto está configurado para ejecutarse completamente utilizando Docker Compose, eliminando la necesidad de instalar Python o dependencias en tu máquina local.
+---
 
-### Requisitos previos
+## Descripción del Proyecto
 
-- [Docker](https://www.docker.com/get-started)
-- [Docker Compose](https://docs.docker.com/compose/install/)
+Este proyecto implementa un sistema de recomendación de películas accesible vía web. Combina técnicas de filtrado colaborativo y basado en contenido para ofrecer recomendaciones personalizadas y precisas, gestionando eficientemente grandes volúmenes de datos.
 
-### Iniciar la aplicación
+## Ejecución y Gestión
 
-Para iniciar la aplicación Streamlit, ejecuta el siguiente comando en la raíz del proyecto:
+La aplicación está contenerizada para facilitar su ejecución sin dependencias locales complejas.
 
-```bash
-docker compose up
-```
+### Requisitos
 
-La aplicación estará disponible en [http://localhost:8501](http://localhost:8501).
+- Docker y Docker Compose.
 
-> **Nota:** El contenedor instalará automáticamente las dependencias listadas en `requirements.txt` cada vez que se inicie.
+### Puesta en marcha
 
-### Detener la aplicación
-
-Para detener la aplicación, presiona `Ctrl+C` en la terminal donde se está ejecutando, o ejecuta en otra terminal:
-
-```bash
-docker compose down
-```
-
-### Ejecutar comandos personalizados
-
-Puedes ejecutar cualquier comando dentro del entorno del contenedor utilizando `docker compose run`. Esto es útil para ejecutar scripts de Python, pruebas o tareas de mantenimiento sin ensuciar tu entorno local.
-
-**Sintaxis general:**
-
-```bash
-docker compose run --rm app <comando>
-```
-
-#### Ejemplos útiles:
-
-1.  **Ejecutar un script de Python:**
-
+1.  Inicia la aplicación desde la raíz del proyecto:
     ```bash
-    docker compose run --rm app python src/evaluate.py
+    docker compose up
     ```
+2.  Accede a la interfaz web en: [http://localhost:8501](http://localhost:8501)
 
-2.  **Abrir una terminal interactiva (shell):**
+Para detener el sistema, usa `Ctrl+C` en la terminal o ejecuta `docker compose down` en otra ventana.
 
-    ```bash
-    docker compose run --rm app /bin/bash
-    ```
+> **Nota:** El contenedor instalará automáticamente las dependencias necesarias al iniciarse.
 
-3.  **Verificar la versión de Python:**
+## Funcionamiento Técnico del Sistema
 
-    ```bash
-    docker compose run --rm app python --version
-    ```
+El núcleo del recomendador es un **sistema híbrido** que integra dos enfoques complementarios para maximizar la relevancia de las sugerencias:
 
-4.  **Instalar una dependencia temporalmente:**
+### 1. Filtrado Colaborativo (SVD)
 
-    ```bash
-    docker compose run --rm app pip install pandas
-    ```
+Utilizamos el algoritmo **Singular Value Decomposition (SVD)** para capturar patrones latentes en las valoraciones de los usuarios.
 
-### Gestión de Dependencias
+- **Matriz de Factores**: Descomponemos la matriz de interacción Usuario-Ítem en vectores de características latentes para usuarios ($p_u$) e ítems ($q_i$).
+- **Predicción**: La valoración estimada se calcula como $\hat{r}_{ui} = \mu + b_u + b_i + q_i^T p_u$.
+- **Optimización**: Para manejar el dataset de 32M de interacciones de manera eficiente, no cargamos el modelo completo en memoria. En su lugar, extraemos las matrices ($P, Q, B_u, B_i$) y utilizamos **Memory Mapping** (`numpy.load(mmap_mode='r')`) junto con operaciones vectorizadas. Esto permite generar predicciones para todo el catálogo en milisegundos con un consumo mínimo de RAM.
 
-Para agregar una nueva librería al proyecto de forma permanente:
+### 2. Filtrado Basado en Contenido (Géneros)
 
-1.  Agrega el nombre de la librería al archivo `requirements.txt`.
-2.  Reinicia el contenedor con `docker compose up`.
+Para refinar las recomendaciones y respetar las preferencias explícitas del usuario, el sistema incorpora un **score de afinidad** de género. Este se calcula midiendo la intersección entre los géneros de cada película y los seleccionados por el usuario en su perfil, normalizando por el tamaño de la selección (similar a un índice de Jaccard adaptado).
 
-## Funcionamiento del Sistema Recomendador
+### 3. Enfoque Híbrido y "Fold-In"
 
-El sistema utiliza un algoritmo de **Filtrado Colaborativo** basado en **Descomposición en Valores Singulares (SVD)**. A continuación se detallan los aspectos técnicos de su implementación y optimización.
+- **Score Final**: La lista final de recomendaciones se ordena mediante una combinación lineal ponderada del score normalizado del SVD (calidad global/personalizada) y el score de género (preferencia actual).
+- **Cold Start (Fold-In)**: Para nuevos usuarios o sesiones anónimas, el sistema ejecuta un proceso de **optimización SGD en tiempo real** ("Fold-in"). Esto calcula un vector latente temporal ($p_u$) basándose exclusivamente en las valoraciones que el usuario realiza durante la sesión, permitiendo generar recomendaciones personalizadas instantáneamente sin necesidad de reentrenar el modelo global.
 
-### 1. Modelo Matemático (SVD)
+## Estructura del Proyecto
 
-El modelo SVD descompone la matriz de valoraciones usuario-ítem $R$ en el producto de factores latentes. La predicción de la valoración $\hat{r}_{ui}$ que un usuario $u$ daría a un ítem $i$ se calcula como:
+A continuación se describen los ficheros clave para facilitar la evaluación del código:
 
-$$
-\hat{r}_{ui} = \mu + b_u + b_i + q_i^T p_u
-$$
-
-Donde:
-
-- $\mu$: Media global de todas las valoraciones.
-- $b_u$: Sesgo (bias) del usuario $u$ (tendencia del usuario a valorar alto o bajo).
-- $b_i$: Sesgo (bias) del ítem $i$ (tendencia de la película a recibir valoraciones altas o bajas).
-- $q_i$: Vector de factores latentes del ítem $i$.
-- $p_u$: Vector de factores latentes del usuario $u$.
-
-### 2. Optimización de Memoria y Rendimiento
-
-Originalmente, cargar el modelo completo (1.1GB) en memoria causaba problemas de rendimiento. Se ha implementado una solución optimizada:
-
-#### Extracción de Matrices
-
-En lugar de cargar el objeto Python completo (pickled), extraemos las matrices numéricas esenciales ($P$, $Q$, $B_u$, $B_i$) y las guardamos en formato binario de Numpy (`.npy`).
-
-#### Memory Mapping
-
-Utilizamos `numpy.load(..., mmap_mode='r')` para cargar estas matrices. Esto permite al sistema operativo mapear el archivo en disco directamente a la memoria virtual, cargando solo los fragmentos necesarios en la RAM física bajo demanda. Esto reduce drásticamente el consumo de memoria inicial.
-
-#### Vectorización
-
-La generación de recomendaciones se realiza mediante operaciones vectoriales de Numpy en lugar de bucles de Python. Calculamos las predicciones para **todas** las películas simultáneamente:
-
-```python
-# Cálculo vectorizado para todos los ítems
-scores = np.dot(qi, user_factors) + bi + user_bias + global_mean
-```
-
-Esto es significativamente más rápido que iterar sobre cada película y llamar al método `predict()` de la librería Surprise.
-
-### 3. Flujo de Recomendación
-
-1.  **Carga Lazy**: Los componentes del modelo solo se mapean en memoria cuando se solicitan recomendaciones.
-2.  **Cálculo de Scores**: Se calcula el score predicho para todas las películas del catálogo utilizando la fórmula vectorial.
-3.  **Filtrado**: Se eliminan las películas que el usuario ya ha valorado.
-4.  **Ranking**: Se ordenan las películas restantes por score descendente.
-5.  **Enriquecimiento**: Se añaden metadatos (título, género) a los top-N resultados para mostrarlos en la UI.
+- **`src/`**: Directorio principal del código fuente.
+  - **`app.py`**: Punto de entrada de la aplicación Streamlit. Orquesta la interfaz y el flujo de navegación.
+  - **`model.py`**: **[CRÍTICO]** Contiene la lógica del sistema recomendador. Aquí se encuentran:
+    - `load_optimized_components()`: Carga eficiente de matrices.
+    - `fold_in_user()`: Algoritmo para nuevos usuarios.
+    - `get_recommendations()`: Lógica híbrida de puntuación y ranking.
+  - **`database.py`**: Manejo de la base de datos SQLite (usuarios y ratings).
+  - **`data_loader.py`**: Carga de datasets estáticos (títulos de películas).
+  - **`ui/`**: Módulos para la interfaz de usuario (componentes de recomendaciones, perfil, etc.).
+- **`models/`**: Contiene los archivos binarios (`.npy`) del modelo SVD entrenado y optimizado.
+- **`data/`**: Base de datos SQLite (`movie_recsys.db`).
+- **`docker-compose.yml`**: Definición de la infraestructura para el despliegue.
