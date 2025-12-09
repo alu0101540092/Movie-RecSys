@@ -78,10 +78,6 @@ def search_movies(query, movies_df):
         return movies_df.head(20)
 
     # Convert potential Spanish genre in query to English
-    # Import locally to avoid circular import if utils imports data_loader (it doesn't, but safety first or move import top)
-    # Actually utils doesn't import data_loader. Safe to import at top. 
-    # But let's check if we can import at top. 
-    # For now, I'll do a local import or standard import if I add it to top.
     from src.utils import get_english_genre
     
     # Try to map the whole query as a genre

@@ -261,7 +261,6 @@ def get_recommendations(user_id, n=10, selected_genres=None, alpha=0.5):
         
         if selected_genres:
             # Compute genre scores for ALL items
-            # This is a bit expensive if done in python for 80k items, but let's try.
             # Convert selected_genres to set
             target_genres = set(selected_genres)
             
@@ -293,7 +292,7 @@ def get_recommendations(user_id, n=10, selected_genres=None, alpha=0.5):
             # Normalized SVD: SVD / 5.0  (0.2 - 1.0)
             svd_norm = scores / 5.0
             
-            # Hybrid Formula from user:
+            # Hybrid Formula:
             # hybrid_score = (alpha * svd_norm) + ((1 - alpha) * genre_score)
             
             # Use final_scores for ranking
@@ -332,8 +331,7 @@ def get_recommendations(user_id, n=10, selected_genres=None, alpha=0.5):
                     "hybrid_score": float(hybrid_score_val) # Internal ranking score
                 })
                 
-        # If we filtered out some rated movies, we might have fewer than n
-        # In that case we should take more from argpartition, but for simplicity:
+        # If we filtered out some rated movies, we might have fewer than n.
         return recommendations[:n]
 
     else:

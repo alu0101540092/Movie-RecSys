@@ -45,8 +45,7 @@ def init_db():
     )
 
     # Ratings table
-    # We use a composite primary key or just an index.
-    # For simplicity in this prototype, we'll just index user_id and movie_id.
+    # Indexing user_id and movie_id for efficient lookups.
     c.execute(
         """
         CREATE TABLE IF NOT EXISTS ratings (
