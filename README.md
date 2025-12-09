@@ -26,10 +26,11 @@ La aplicación está contenerizada para facilitar su ejecución sin dependencias
 ### Puesta en marcha
 
 1.  Inicia la aplicación desde la raíz del proyecto:
+
     ```bash
     docker compose up
     ```
-2.  Accede a la interfaz web en: [http://localhost:8501](http://localhost:8501)
+3.  Accede a la interfaz web en: [http://localhost:8501](http://localhost:8501)
 
 Para detener el sistema, usa `Ctrl+C` en la terminal o ejecuta `docker compose down` en otra ventana.
 
