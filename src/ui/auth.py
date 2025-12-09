@@ -6,7 +6,7 @@ from src.utils import get_spanish_genres_list, get_english_genre
 def render_login():
     """
     Renders the login form.
-    
+
     Allows users to authenticate using their username and password.
     Validation is performed against the database.
     On successful login, session state is updated and the app reruns.
@@ -32,7 +32,7 @@ def render_login():
 def render_register():
     """
     Renders the registration form.
-    
+
     Allows new users to sign up by providing username, email, password,
     and selecting favorite genres.
     Password is hashed before storage.
@@ -45,7 +45,9 @@ def render_register():
 
         # Genre selection
         genres = get_spanish_genres_list()
-        favorite_genres_es = st.multiselect("Géneros Favoritos", genres, placeholder="Elige una opción")
+        favorite_genres_es = st.multiselect(
+            "Géneros Favoritos", genres, placeholder="Elige una opción"
+        )
         # Map back to English for storage
         favorite_genres = [get_english_genre(g) for g in favorite_genres_es]
 
@@ -66,7 +68,7 @@ def render_register():
 def auth_page():
     """
     Renders the main authentication page.
-    
+
     Displays tabs for "Login" and "Register".
     """
     tab1, tab2 = st.tabs(["Iniciar Sesión", "Registrarse"])

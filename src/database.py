@@ -12,7 +12,7 @@ DB_PATH = os.path.join(BASE_DIR, "data", "movie_recsys.db")
 def get_db_connection():
     """
     Establishes a connection to the SQLite database.
-    
+
     Returns:
         sqlite3.Connection: A connection object with row_factory set to sqlite3.Row.
     """
@@ -24,7 +24,7 @@ def get_db_connection():
 def init_db():
     """
     Initializes the database schema.
-    
+
     Creates 'users' and 'ratings' tables if they do not exist.
     Also handles schema migrations, such as adding the 'timestamp' column to 'ratings'.
     """
@@ -57,7 +57,7 @@ def init_db():
         )
     """
     )
-    
+
     # Check if timestamp column exists (migration for existing DBs)
     c.execute("PRAGMA table_info(ratings)")
     columns = [info[1] for info in c.fetchall()]
@@ -66,7 +66,10 @@ def init_db():
         c.execute("ALTER TABLE ratings ADD COLUMN timestamp INTEGER")
         # Optional: Backfill with current time for existing ratings
         current_time = int(datetime.now().timestamp())
-        c.execute("UPDATE ratings SET timestamp = ? WHERE timestamp IS NULL", (current_time,))
+        c.execute(
+            "UPDATE ratings SET timestamp = ? WHERE timestamp IS NULL",
+            (current_time,),
+        )
         print("Migration completed.")
 
     conn.commit()
@@ -76,10 +79,10 @@ def init_db():
 def hash_password(password):
     """
     Hashes a password using SHA-256.
-    
+
     Args:
         password (str): The plain text password.
-        
+
     Returns:
         str: The hexadecimal digest of the hashed password.
     """
@@ -89,13 +92,13 @@ def hash_password(password):
 def create_user(username, email, password, favorite_genres):
     """
     Creates a new user in the database.
-    
+
     Args:
         username (str): The username.
         email (str): The user's email.
         password (str): The user's password (will be hashed).
         favorite_genres (list): A list of favorite genres (strings).
-        
+
     Returns:
         bool: True if the user was created successfully, False if the username or email already exists.
     """
@@ -122,11 +125,11 @@ def create_user(username, email, password, favorite_genres):
 def authenticate_user(username, password):
     """
     Authenticates a user by checking their username and password.
-    
+
     Args:
         username (str): The username.
         password (str): The plain text password.
-        
+
     Returns:
         sqlite3.Row or None: The user row if authentication is successful, None otherwise.
     """
@@ -144,7 +147,7 @@ def authenticate_user(username, password):
 def delete_user(user_id):
     """
     Deletes a user and their associated ratings from the database.
-    
+
     Args:
         user_id (int): The ID of the user to delete.
     """
@@ -159,7 +162,7 @@ def delete_user(user_id):
 def add_rating(user_id, movie_id, rating):
     """
     Adds or updates a rating for a specific movie by a user.
-    
+
     Args:
         user_id (int): The ID of the user.
         movie_id (int): The ID of the movie.
@@ -179,10 +182,10 @@ def add_rating(user_id, movie_id, rating):
 def get_user_ratings(user_id):
     """
     Retrieves all ratings made by a specific user.
-    
+
     Args:
         user_id (int): The ID of the user.
-        
+
     Returns:
         pd.DataFrame: A DataFrame containing the user's ratings (movie_id, rating, timestamp).
     """
@@ -193,11 +196,10 @@ def get_user_ratings(user_id):
     return df
 
 
-
 def get_all_ratings():
     """
     Retrieves all ratings from the database.
-    
+
     Returns:
         pd.DataFrame: A DataFrame containing all ratings (user_id, movie_id, rating, timestamp).
     """
@@ -211,10 +213,10 @@ def get_all_ratings():
 def get_user_genres(user_id):
     """
     Retrieves the favorite genres of a specific user.
-    
+
     Args:
         user_id (int): The ID of the user.
-        
+
     Returns:
         list: A list of genre strings.
     """
@@ -231,7 +233,7 @@ def get_user_genres(user_id):
 def update_user_genres(user_id, genres):
     """
     Updates the favorite genres for a specific user.
-    
+
     Args:
         user_id (int): The ID of the user.
         genres (list): A list of new favorite genres (strings).

@@ -1,17 +1,27 @@
 import streamlit as st
 import pandas as pd
 from src.data_loader import load_movies, search_movies
-from src.database import add_rating, get_user_ratings, delete_user, get_user_genres, update_user_genres
+from src.database import (
+    add_rating,
+    get_user_ratings,
+    delete_user,
+    get_user_genres,
+    update_user_genres,
+)
 from src.model import get_recommendations
-from src.utils import translate_genres, get_spanish_genres_list, get_english_genre
+from src.utils import (
+    translate_genres,
+    get_spanish_genres_list,
+    get_english_genre,
+)
 
 
 def render_search_tab():
     """
     Renders the 'Search' tab.
-    
+
     Allows users to search for movies by title or genre.
-    Displays results with pagination and allows users to rate movies 
+    Displays results with pagination and allows users to rate movies
     (1-5 stars). Ratings are saved to the database.
     """
     st.header("Buscar y Valorar Películas")
@@ -41,40 +51,48 @@ def render_search_tab():
         ITEMS_PER_PAGE = 10
         total_results = len(results)
         total_pages = (total_results + ITEMS_PER_PAGE - 1) // ITEMS_PER_PAGE
-        
+
         # Ensure current page is valid
         if st.session_state["search_page"] >= total_pages:
-             st.session_state["search_page"] = max(0, total_pages - 1)
-        
+            st.session_state["search_page"] = max(0, total_pages - 1)
+
         current_page = st.session_state["search_page"]
         start_idx = current_page * ITEMS_PER_PAGE
         end_idx = min(start_idx + ITEMS_PER_PAGE, total_results)
-        
-        st.write(f"Mostrando {start_idx + 1}-{end_idx} de {total_results} resultados:")
-        
+
+        st.write(
+            f"Mostrando {start_idx + 1}-{end_idx} de {total_results} resultados:"
+        )
+
         # Slice results
         page_results = results.iloc[start_idx:end_idx]
 
         # Display as a list/grid
         for index, row in page_results.iterrows():
-            with st.expander(f"{row['title']} ({translate_genres(row['genres'])})"):
+            with st.expander(
+                f"{row['title']} ({translate_genres(row['genres'])})"
+            ):
                 # Rating slider
                 # Integer rating (1-5 stars)
                 # st.feedback returns 0-4
                 rating_idx = st.feedback("stars", key=f"rate_{row['movieId']}")
-                
+
                 if st.button("Enviar Valoración", key=f"btn_{row['movieId']}"):
                     if rating_idx is not None:
                         final_rating = rating_idx + 1
                         add_rating(
-                            st.session_state["user_id"], row["movieId"], final_rating
+                            st.session_state["user_id"],
+                            row["movieId"],
+                            final_rating,
                         )
                         st.success(
                             f"Valoraste '{row['title']}' con {final_rating} estrellas."
                         )
                     else:
-                        st.warning("Por favor, selecciona una puntuación antes de enviar.")
-        
+                        st.warning(
+                            "Por favor, selecciona una puntuación antes de enviar."
+                        )
+
         # Pagination Controls
         col1, col2, col3 = st.columns([1, 2, 1])
         with col1:
@@ -92,7 +110,7 @@ def render_search_tab():
 def render_recommendations_tab():
     """
     Renders the 'Recommendations' tab.
-    
+
     Displays personalized movie recommendations based on the user's ratings
     and selected preferred genres (Hybrid Recommendation System).
     Uses the SVD model (or optimized components) for prediction.
@@ -101,27 +119,27 @@ def render_recommendations_tab():
 
     # --- UI Controls for Hybrid Recommendations ---
     st.subheader("Preferencias de Recomendación")
-    
+
     # Load unique genres for selector
     sorted_genres = get_spanish_genres_list()
-    
+
     selected_genres_es = st.multiselect(
         "¿Qué te apetece ver hoy? (Opcional)",
         sorted_genres,
         default=[],
-        placeholder="Elige una opción"
+        placeholder="Elige una opción",
     )
-    
+
     # Convert back to English for model query
     selected_genres = [get_english_genre(g) for g in selected_genres_es]
 
     if st.button("Generar Recomendaciones", type="primary"):
         with st.spinner("Calculando recomendaciones..."):
             recs = get_recommendations(
-                st.session_state["user_id"], 
-                n=10, 
-                selected_genres=selected_genres, 
-                alpha=0.5 # Fixed alpha
+                st.session_state["user_id"],
+                n=10,
+                selected_genres=selected_genres,
+                alpha=0.5,  # Fixed alpha
             )
 
         if not recs:
@@ -138,7 +156,7 @@ def render_recommendations_tab():
 def render_profile_tab():
     """
     Renders the 'Profile' tab.
-    
+
     Displays:
     - User information.
     - A table of the user's past ratings (sortable).
@@ -156,44 +174,48 @@ def render_profile_tab():
         merged = user_ratings.merge(
             movies_df, left_on="movie_id", right_on="movieId"
         )
-        
+
         # Sort by timestamp descending (newest first)
         if "timestamp" in merged.columns:
             merged = merged.sort_values(by="timestamp", ascending=False)
-        
+
         # Rename columns
-        merged = merged.rename(columns={
-            "title": "Título",
-            "rating": "Puntuación", 
-            "genres": "Géneros"
-        })
-        
+        merged = merged.rename(
+            columns={
+                "title": "Título",
+                "rating": "Puntuación",
+                "genres": "Géneros",
+            }
+        )
+
         merged["Géneros"] = merged["Géneros"].apply(translate_genres)
-        
+
         # Reset index to start at 1 and set name
         merged.index = range(1, len(merged) + 1)
         merged.index.name = "Nº"
-        
+
         # Select and display with styling
         st.dataframe(
-            merged[["Título", "Puntuación", "Géneros"]].style
-            .format({"Puntuación": "{:.0f}"})
-            .set_properties(subset=["Título", "Puntuación"], **{'text-align': 'center'})
-            .set_table_styles([
-                {'selector': 'th', 'props': [('text-align', 'center')]}
-            ]),
-            use_container_width=True
+            merged[["Título", "Puntuación", "Géneros"]]
+            .style.format({"Puntuación": "{:.0f}"})
+            .set_properties(
+                subset=["Título", "Puntuación"], **{"text-align": "center"}
+            )
+            .set_table_styles(
+                [{"selector": "th", "props": [("text-align", "center")]}]
+            ),
+            use_container_width=True,
         )
     else:
         st.info("Aún no has valorado ninguna película.")
 
     st.markdown("---")
     st.subheader("Géneros Favoritos")
-    
+
     # Load available genres and user's current genres
     available_genres = get_spanish_genres_list()
     current_genres_en = get_user_genres(st.session_state["user_id"])
-    
+
     # Convert current English genres to Spanish for display/selection
     current_genres_es = [translate_genres(g) for g in current_genres_en]
     # Handle potentially malformed or empty translations that might not be in available_genres
@@ -204,7 +226,7 @@ def render_profile_tab():
         "Edita tus géneros preferidos:",
         available_genres,
         default=current_genres_es,
-        placeholder="Elige una opción"
+        placeholder="Elige una opción",
     )
 
     if st.button("Guardar Géneros"):
@@ -226,7 +248,9 @@ def render_profile_tab():
             st.session_state["confirm_delete"] = True
             st.rerun()
     else:
-        st.warning("¿Estás seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer.")
+        st.warning(
+            "¿Estás seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer."
+        )
         # Adjust column weights to keep buttons closer without being stuck
         col_conf1, col_conf2, _ = st.columns([1, 1, 4])
         with col_conf1:
@@ -243,7 +267,7 @@ def render_profile_tab():
 def dashboard_page():
     """
     Renders the main dashboard structure.
-    
+
     Contains tabs for:
     1. Search (and Rating)
     2. Recommendations
