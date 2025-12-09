@@ -7,6 +7,13 @@ from src.utils import translate_genres, get_spanish_genres_list, get_english_gen
 
 
 def render_search_tab():
+    """
+    Renders the 'Search' tab.
+    
+    Allows users to search for movies by title or genre.
+    Displays results with pagination and allows users to rate movies 
+    (1-5 stars). Ratings are saved to the database.
+    """
     st.header("Buscar y Valorar Películas")
 
     query = st.text_input("Buscar por título o género")
@@ -83,6 +90,13 @@ def render_search_tab():
 
 
 def render_recommendations_tab():
+    """
+    Renders the 'Recommendations' tab.
+    
+    Displays personalized movie recommendations based on the user's ratings
+    and selected preferred genres (Hybrid Recommendation System).
+    Uses the SVD model (or optimized components) for prediction.
+    """
     st.header("Recomendaciones para Ti")
 
     # --- UI Controls for Hybrid Recommendations ---
@@ -122,6 +136,15 @@ def render_recommendations_tab():
 
 
 def render_profile_tab():
+    """
+    Renders the 'Profile' tab.
+    
+    Displays:
+    - User information.
+    - A table of the user's past ratings (sortable).
+    - An interface to manage favorite genres.
+    - 'Danger Zone' to delete the account.
+    """
     st.header("Mi Perfil")
     st.write(f"Usuario: {st.session_state['username']}")
 
@@ -218,6 +241,14 @@ def render_profile_tab():
 
 
 def dashboard_page():
+    """
+    Renders the main dashboard structure.
+    
+    Contains tabs for:
+    1. Search (and Rating)
+    2. Recommendations
+    3. Profile (User History and Settings)
+    """
     tab1, tab2, tab3 = st.tabs(["Buscar", "Recomendaciones", "Perfil"])
 
     with tab1:

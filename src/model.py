@@ -17,6 +17,15 @@ MODELS_DIR = os.path.join(BASE_DIR, "models")
 
 
 def train_model():
+    """
+    Trains the SVD recommendation model using the complete dataset.
+    
+    Loads ratings, builds a Surprise trainset, trains the SVD algorithm,
+    and saves the trained model to a pickle file.
+    
+    Returns:
+        surprise.prediction_algorithms.matrix_factorization.SVD: The trained SVD model.
+    """
     print("Training SVD model...")
     ratings_df = load_ratings()
 
@@ -40,6 +49,14 @@ def train_model():
 
 
 def load_model():
+    """
+    Loads the trained SVD model from disk.
+    
+    If the model file exists, it loads it. Otherwise, it triggers the training process.
+    
+    Returns:
+        surprise.prediction_algorithms.matrix_factorization.SVD: The trained SVD model.
+    """
     if os.path.exists(MODEL_PATH):
         with open(MODEL_PATH, "rb") as f:
             data = pickle.load(f)
@@ -51,6 +68,16 @@ def load_model():
 
 
 def load_optimized_components():
+    """
+    Loads optimized model components (matrices) using memory mapping for efficiency.
+    
+    This function attempts to load pre-extracted numpy arrays (pu, qi, bu, bi, global_mean)
+    and ID mappings. This allows for faster recommendation generation without loading
+    the full Surprise model object.
+    
+    Returns:
+        tuple: (pu, qi, bu, bi, global_mean, mappings) or None if files are missing.
+    """
     """Load optimized model components using memory mapping."""
     # Ensure all components are ready (reconstructed if needed)
     for filename in ['svd_pu.npy', 'svd_qi.npy', 'svd_bu.npy', 'svd_bi.npy', 'svd_global_mean.npy']:
@@ -71,6 +98,27 @@ def load_optimized_components():
         return None
 
 def fold_in_user(user_ratings_df, qi, bi, global_mean, mappings, n_epochs=100, lr=0.01, reg=0.05):
+    """
+    Optimizes the user latent factors (pu) and user bias (bu) for a specific user
+    based on their current ratings.
+    
+    This performs a mini-SGD 'fold-in' process at runtime, allowing the model
+    to generate personalized recommendations for users who rated items after
+    the model was trained, or to update recommendations immediately after a new rating.
+    
+    Args:
+        user_ratings_df (pd.DataFrame): The user's ratings.
+        qi (np.ndarray): Item latent factors matrix.
+        bi (np.ndarray): Item bias vector.
+        global_mean (float): Global mean rating.
+        mappings (dict): Dictionaries mapping raw IDs to inner IDs.
+        n_epochs (int): Number of SGD iterations.
+        lr (float): Learning rate.
+        reg (float): Regularization term.
+        
+    Returns:
+        tuple: (pu, bu) where pu is the user factor vector and bu is the user bias.
+    """
     """
     Optimizes the user latent factors (pu) and user bias (bu) for a specific user
     based on their current ratings, performing a mini SGD 'fold-in' at runtime.
@@ -140,6 +188,26 @@ def fold_in_user(user_ratings_df, qi, bi, global_mean, mappings, n_epochs=100, l
     return pu, bu
 
 def get_recommendations(user_id, n=10, selected_genres=None, alpha=0.5):
+    """
+    Generates a list of movie recommendations for a user.
+    
+    This function uses a hybrid approach:
+    1. SVD Score: Incorporates collaborative filtering (users who liked similar movies).
+    2. Genre Score: Incorporates content-based filtering (user's selected genres).
+    
+    The final score is a weighted average of normalized SVD scores and genre overlap scores.
+    It attempts to use the optimized components first, falling back to the standard
+    Surprise model if optimization files are missing.
+    
+    Args:
+        user_id (int): The ID of the user.
+        n (int): Number of recommendations to return.
+        selected_genres (list): List of genres to boost (Hybrid approach).
+        alpha (float): Weight for SVD score (0.0 - 1.0). 1.0 = Pure SVD, 0.0 = Pure Genre.
+        
+    Returns:
+        list: A list of dictionaries representing recommended movies.
+    """
     """
     Generate recommendations for a user.
     Args:

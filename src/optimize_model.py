@@ -4,6 +4,13 @@ import numpy as np
 from src.model import MODEL_PATH, BASE_DIR
 
 def optimize():
+    """
+    Extracts and optimizes individual SVD model components for faster loading.
+    
+    Loads the full pickled SVD model, extracts the latent factor matrices (pu, qi)
+    and bias vectors (bu, bi), and saves them as separate numpy arrays.
+    It also saves the global mean and ID mappings.
+    """
     print(f"Loading model from {MODEL_PATH}...")
     if not os.path.exists(MODEL_PATH):
         print("Model file not found.")

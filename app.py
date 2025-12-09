@@ -5,20 +5,29 @@ from src.ui.dashboard import dashboard_page
 
 
 def main():
+    """
+    Main entry point for the Streamlit application.
+
+    This function sets up the page configuration, initializes the database,
+    manages the user session state, and routes the user to the appropriate
+    page (authentication or dashboard) based on their login status.
+    """
     st.set_page_config(page_title="Movie Recommender", layout="wide")
 
-    # Initialize DB
+    # Initialize the database (create tables if they don't exist)
     init_db()
 
-    # Session State
+    # Initialize Session State for login management
     if "logged_in" not in st.session_state:
         st.session_state["logged_in"] = False
 
     st.title("🎬 Sistema Recomendador de Películas")
 
+    # Routing logic: Show Auth page if not logged in, otherwise show Dashboard
     if not st.session_state["logged_in"]:
         auth_page()
     else:
+        # Sidebar with user info and logout button
         with st.sidebar:
             st.write(f"Hola, **{st.session_state['username']}**")
             if st.button("Cerrar Sesión"):

@@ -17,6 +17,13 @@ TAGS_FILE = os.path.join(DATA_DIR, "ml-32m", "tags.csv")
 
 
 def ensure_dataset_exists():
+    """
+    Ensures that the MovieLens dataset exists locally.
+    
+    It first attempts to reconstruct larger files from parts (if applicable).
+    Then it checks if the core files (movies.csv, ratings.csv) exist.
+    If not, it downloads the dataset from the official URL and extracts it.
+    """
     # Check if we need to reconstruct files from parts
     join_file(RATINGS_FILE)
     join_file(TAGS_FILE)
@@ -31,16 +38,42 @@ def ensure_dataset_exists():
 
 
 def load_movies():
+    """
+    Loads the movies dataset into a pandas DataFrame.
+    
+    Returns:
+        pd.DataFrame: A DataFrame containing movie information (movieId, title, genres).
+    """
     ensure_dataset_exists()
     return pd.read_csv(MOVIES_FILE)
 
 
 def load_ratings():
+    """
+    Loads the ratings dataset into a pandas DataFrame.
+    
+    Returns:
+        pd.DataFrame: A DataFrame containing ratings (userId, movieId, rating, timestamp).
+    """
     ensure_dataset_exists()
     return pd.read_csv(RATINGS_FILE)
 
 
 def search_movies(query, movies_df):
+    """
+    Searches for movies based on a query string.
+    
+    The search is performed in two steps:
+    1. It attempts to translate the query (if it's a Spanish genre) to English.
+    2. It filters the DataFrame for matches in either the 'title' or 'genres' columns.
+    
+    Args:
+        query (str): The search term entered by the user.
+        movies_df (pd.DataFrame): The DataFrame containing movie data.
+        
+    Returns:
+        pd.DataFrame: A filtered DataFrame containing matching movies.
+    """
     if not query:
         return movies_df.head(20)
 
@@ -73,6 +106,16 @@ def search_movies(query, movies_df):
 
 
 def get_movie_title(movie_id, movies_df):
+    """
+    Retrieves the title of a movie given its ID.
+    
+    Args:
+        movie_id (int): The ID of the movie.
+        movies_df (pd.DataFrame): The DataFrame containing movie data.
+        
+    Returns:
+        str: The title of the movie, or "Unknown" if not found.
+    """
     movie = movies_df[movies_df["movieId"] == movie_id]
     if not movie.empty:
         return movie.iloc[0]["title"]
